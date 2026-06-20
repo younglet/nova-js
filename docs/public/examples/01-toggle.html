@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs · 01 单设备开关</title>
+  <link rel="stylesheet" href="../../nova-style/nova-style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white p-8 rounded-lg shadow w-80 text-center">
+    <div class="text-xs text-gray-500 mb-1">设备 ID: {{ device.id }}</div>
+    <div class="text-lg font-bold mb-6">{{ device.name }}</div>
+
+    <!-- 大开关 -->
+    <button @click="toggle()"
+            :disabled="busy"
+            class="w-24 h-24 rounded-full border-0 cursor-pointer transition-all mx-auto block text-4xl"
+            :class="power ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-400'">
+      ⏻
+    </button>
+
+    <div class="mt-4 text-base">
+      状态：<b :class="power ? 'text-green-500' : 'text-gray-500'">{{ power ? '已开启' : '已关闭' }}</b>
+    </div>
+
+    <div if="busy" class="mt-2 text-xs text-gray-500">⏳ 通讯中…</div>
+    <div if="msg" class="mt-2 text-xs" :class="msg.startsWith('❌') ? 'text-red-500' : 'text-gray-500'">{{ msg }}</div>
+  </div>
+
+  <script src="../src/novajs.js"></script>
+  <script>
+    // ============ Mock 后端（生产环境删掉这段） ============
+    ;(function () {
+      var mockDB = { 'light-001': { on: false } }
+      var _get = nova.http.get, _post = nova.http.post
+      nova.http.get = async function (url) {
+        await new Promise(function (r) { setTimeout(r, 200) })
+        for (var k in mockDB) if (url.indexOf(k) >= 0) return Object.assign({}, mockDB[k])
+        return {}
+      }
+      nova.http.post = async function (url, body) {
+        await new Promise(function (r) { setTimeout(r, 400) })
+        for (var k in mockDB) if (url.indexOf(k) >= 0) {
+          if (body && body.on !== undefined) mockDB[k].on = body.on
+        }
+        return { ok: true }
+      }
+    })()
+
+    // ============ 应用 ============
+    const data = nova({
+      data: {
+        device: { id: 'light-001', name: '客厅吸顶灯' },
+        power: false,
+        busy: false,
+        msg: ''
+      },
+      funcs: {
+        async toggle () {
+          this.busy = true
+          this.msg = ''
+          try {
+            await nova.http.post('/api/device/' + this.device.id + '/toggle', { on: !this.power })
+            this.power = !this.power
+            this.msg = '已 ' + (this.power ? '开启' : '关闭')
+            setTimeout(() => { if (this.msg === '已 ' + (this.power ? '开启' : '关闭')) this.msg = '' }, 2000)
+          } catch (e) {
+            this.msg = '❌ ' + e.message
+          } finally {
+            this.busy = false
+          }
+        }
+      }
+    })
+
+    // 启动时拉真实状态
+    nova.http.get('/api/device/' + data.device.id).then(function (d) {
+      data.power = !!d.on
+    })
+  </script>
+</body>
+</html>

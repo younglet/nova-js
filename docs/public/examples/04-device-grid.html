@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs · 04 设备网格</title>
+  <link rel="stylesheet" href="../../nova-style/nova-style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
+    <div class="text-lg font-bold">🏠 智能家居控制台</div>
+    <div class="text-sm">
+      <span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-1"></span>
+      {{ onCount }} 台设备开启 · {{ devices.length }} 台总计
+    </div>
+  </div>
+
+  <div class="p-4">
+    <div class="flex gap-2 mb-4">
+      <button @click="allOn()"
+              class="flex-1 py-2 rounded bg-green-500 text-white text-sm cursor-pointer border-0">
+        ✅ 全部开启
+      </button>
+      <button @click="allOff()"
+              class="flex-1 py-2 rounded bg-red-500 text-white text-sm cursor-pointer border-0">
+        🚫 全部关闭
+      </button>
+    </div>
+
+    <!-- 设备网格 -->
+    <div class="grid grid-cols-2 gap-3">
+      <div loop="d in devices" :key="d.id"
+           class="bg-white p-4 rounded-lg shadow">
+
+        <!-- 设备头部 -->
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">{{ d.icon }}</span>
+            <span class="font-bold">{{ d.name }}</span>
+          </div>
+          <span class="w-2 h-2 rounded-full"
+                :class="statusClass(d)"></span>
+        </div>
+
+        <!-- 类型：开关 -->
+        <div if="d.type === 'switch'" class="flex gap-2">
+          <button @click="setPower(d, true)"
+                  class="flex-1 py-2 rounded text-sm cursor-pointer border-0"
+                  :class="d.on ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'">
+            开
+          </button>
+          <button @click="setPower(d, false)"
+                  class="flex-1 py-2 rounded text-sm cursor-pointer border-0"
+                  :class="!d.on ? 'bg-gray-500 text-white' : 'bg-gray-200 text-gray-700'">
+            关
+          </button>
+        </div>
+
+        <!-- 类型：调光 -->
+        <div if="d.type === 'dimmer'">
+          <input type="range" min="0" max="100"
+                 :value="d.value"
+                 @input="setDim(d, $event.target.value)"
+                 class="w-full cursor-pointer">
+          <div class="text-center text-2xl font-bold mt-2">{{ d.value }}<span class="text-sm text-gray-500"> %</span></div>
+        </div>
+
+        <!-- 类型：传感器 -->
+        <div if="d.type === 'sensor'">
+          <div class="text-3xl font-bold text-center" :class="d.online ? '' : 'text-gray-400'">
+            {{ d.online ? d.value.toFixed(1) : '--' }}
+            <span class="text-sm text-gray-500">{{ d.unit }}</span>
+          </div>
+          <div class="text-center text-xs mt-1" :class="d.online ? 'text-green-500' : 'text-red-500'">
+            {{ d.online ? '在线 · ' + d.lastUpdate : '离线' }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../src/novajs.js"></script>
+  <script>
+    // ============ Mock 后端 ============
+    ;(function () {
+      var db = {
+        1: { on: false }, 2: { value: 50 },
+        3: { value: 24.5 }, 4: { value: 58.0 }
+      }
+      nova.http.post = async function (url, body) {
+        await new Promise(function (r) { setTimeout(r, 200) })
+        for (var k in db) if (url.indexOf('/' + k + '/') >= 0) {
+          if (body && body.on !== undefined) db[k].on = body.on
+        }
+        return { ok: true }
+      }
+      nova.http.put = async function (url, body) {
+        await new Promise(function (r) { setTimeout(r, 200) })
+        for (var k in db) if (url.indexOf('/' + k + '/') >= 0) {
+          if (body && body.value !== undefined) db[k].value = body.value
+        }
+        return { ok: true }
+      }
+      nova.http.get = async function (url) {
+        await new Promise(function (r) { setTimeout(r, 150) })
+        var result = {}
+        for (var k in db) result[k] = db[k]
+        return result
+      }
+    })()
+
+    // ============ 应用 ============
+    const data = nova({
+      data: {
+        devices: [
+          { id: 1, icon: '💡', name: '客厅灯',     type: 'switch', on: false },
+          { id: 2, icon: '🌀', name: '风扇',       type: 'dimmer', value: 50 },
+          { id: 3, icon: '🌡', name: '空气温度',   type: 'sensor', value: 0,    unit: '°C', online: false, lastUpdate: '' },
+          { id: 4, icon: '💧', name: '空气湿度',   type: 'sensor', value: 0,    unit: '%RH', online: false, lastUpdate: '' }
+        ]
+      },
+      funcs: {
+        // 派生：开启数量
+        get onCount () {
+          return this.devices.filter(function (d) { return d.on === true }).length
+        },
+
+        // 状态点颜色
+        statusClass (d) {
+          if (d.type === 'sensor') return d.online ? 'bg-green-500' : 'bg-red-500'
+          if (d.type === 'switch') return d.on ? 'bg-green-500' : 'bg-gray-300'
+          if (d.type === 'dimmer') return d.value > 0 ? 'bg-blue-500' : 'bg-gray-300'
+          return 'bg-gray-300'
+        },
+
+        async setPower (d, on) {
+          d.on = on  // 乐观更新
+          try {
+            await nova.http.post('/api/device/' + d.id + '/power', { on: on })
+          } catch (e) {
+            d.on = !on  // 失败回滚
+          }
+        },
+
+        // 调光：防抖
+        setDim: nova.debounce(function (d, val) {
+          d.value = +val
+          nova.http.put('/api/device/' + d.id + '/dim', { value: +val })
+        }, 300),
+
+        allOn () {
+          this.devices.forEach(function (d) {
+            if (d.type === 'switch' && !d.on) data.setPower(d, true)
+          })
+        },
+
+        allOff () {
+          this.devices.forEach(function (d) {
+            if (d.type === 'switch' && d.on) data.setPower(d, false)
+          })
+        },
+
+        async pollSensors () {
+          try {
+            const r = await nova.http.get('/api/sensors')
+            const tempSensor = this.devices.find(function (d) { return d.id === 3 })
+            const humidSensor = this.devices.find(function (d) { return d.id === 4 })
+            if (tempSensor) { tempSensor.value = r[3].value; tempSensor.online = true; tempSensor.lastUpdate = new Date().toLocaleTimeString() }
+            if (humidSensor) { humidSensor.value = r[4].value; humidSensor.online = true; humidSensor.lastUpdate = new Date().toLocaleTimeString() }
+          } catch (e) {
+            this.devices.forEach(function (d) {
+              if (d.type === 'sensor') d.online = false
+            })
+          }
+        }
+      }
+    })
+
+    // 初始化：拉真实状态 + 启动传感器轮询
+    nova.http.get('/api/devices').then(function (all) {
+      data.devices.forEach(function (d) {
+        var r = all[d.id]
+        if (!r) return
+        if (d.type === 'switch' && r.on !== undefined) d.on = r.on
+        if (d.type === 'dimmer' && r.value !== undefined) d.value = r.value
+      })
+    })
+    data.pollSensors()
+    setInterval(function () { data.pollSensors() }, 3000)
+  </script>
+</body>
+</html>

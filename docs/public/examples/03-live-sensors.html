@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs · 03 实时传感器</title>
+  <link rel="stylesheet" href="../../nova-style/nova-style.css">
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+
+  <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center mb-4">
+    <div>
+      <div class="text-lg font-bold">🌱 大棚传感器</div>
+      <div class="text-xs text-gray-500">自动刷新 · {{ intervalSec }}s</div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-sm" :class="online ? 'text-green-500' : 'text-red-500'">
+        <span class="w-2 h-2 rounded-full inline-block mr-1"
+              :class="online ? 'bg-green-500' : 'bg-red-500'"></span>
+        {{ online ? '在线' : '离线' }}
+      </span>
+      <button @click="poll()" class="px-3 py-1 rounded bg-blue-500 text-white text-sm cursor-pointer border-0">立即刷新</button>
+      <button @click="paused = !paused"
+              class="px-3 py-1 rounded text-sm cursor-pointer border-0"
+              :class="paused ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'">
+        {{ paused ? '已暂停' : '运行中' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <!-- 温度 -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-xs text-gray-500">🌡 空气温度</span>
+        <span class="text-xs px-2 py-0.5 rounded"
+              :class="temp.online ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+          {{ temp.online ? '在线' : '离线' }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold mb-2">{{ temp.value.toFixed(1) }}<span class="text-sm text-gray-500"> °C</span></div>
+      <div class="h-2 bg-gray-200 rounded">
+        <div class="h-2 rounded transition-all" :style="{ width: (temp.value / 50 * 100) + '%', background: '#f59e0b' }"></div>
+      </div>
+    </div>
+
+    <!-- 湿度 -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-xs text-gray-500">💧 空气湿度</span>
+        <span class="text-xs px-2 py-0.5 rounded"
+              :class="humid.online ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+          {{ humid.online ? '在线' : '离线' }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold mb-2">{{ humid.value.toFixed(1) }}<span class="text-sm text-gray-500"> %RH</span></div>
+      <div class="h-2 bg-gray-200 rounded">
+        <div class="h-2 rounded transition-all" :style="{ width: humid.value + '%', background: '#06b6d4' }"></div>
+      </div>
+    </div>
+
+    <!-- 光照 -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-xs text-gray-500">☀ 光照</span>
+        <span class="text-xs px-2 py-0.5 rounded"
+              :class="lux.online ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+          {{ lux.online ? '在线' : '离线' }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold mb-2">{{ lux.value }}<span class="text-sm text-gray-500"> lux</span></div>
+      <div class="h-2 bg-gray-200 rounded">
+        <div class="h-2 rounded transition-all" :style="{ width: (lux.value / 1000 * 100) + '%', background: '#facc15' }"></div>
+      </div>
+    </div>
+
+    <!-- 电压 -->
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-xs text-gray-500">🔋 电压</span>
+        <span class="text-xs px-2 py-0.5 rounded"
+              :class="volt.online ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+          {{ volt.online ? '在线' : '离线' }}
+        </span>
+      </div>
+      <div class="text-3xl font-bold mb-2" :class="volt.value < 3.5 ? 'text-red-500' : ''">
+        {{ volt.value.toFixed(2) }}<span class="text-sm text-gray-500"> V</span>
+      </div>
+      <div class="h-2 bg-gray-200 rounded">
+        <div class="h-2 rounded transition-all"
+             :style="{ width: (volt.value / 5 * 100) + '%', background: volt.value < 3.5 ? '#ef4444' : '#10b981' }"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center text-xs text-gray-500">
+    上次更新：{{ updatedAt || '--:--:--' }}
+  </div>
+
+  <script src="../src/novajs.js"></script>
+  <script>
+    // ============ Mock 后端（带随机波动） ============
+    ;(function () {
+      var baseValues = { temp: 24.5, humid: 58.0, lux: 320, volt: 3.85 }
+      nova.http.get = async function (url) {
+        await new Promise(function (r) { setTimeout(r, 100 + Math.random() * 200) })
+        if (url.indexOf('sensors') >= 0) {
+          return {
+            temp:  +(baseValues.temp  + (Math.random() - 0.5) * 1.5).toFixed(2),
+            humid: +(baseValues.humid + (Math.random() - 0.5) * 4  ).toFixed(2),
+            lux:   ~~(baseValues.lux   + (Math.random() - 0.5) * 80 ),
+            volt:  +(baseValues.volt  + (Math.random() - 0.5) * 0.05).toFixed(3)
+          }
+        }
+        return {}
+      }
+    })()
+
+    // ============ 应用 ============
+    const data = nova({
+      data: {
+        intervalSec: 3,
+        paused: false,
+        online: false,
+        updatedAt: '',
+        temp:  { value: 0, online: false },
+        humid: { value: 0, online: false },
+        lux:   { value: 0, online: false },
+        volt:  { value: 0, online: false }
+      },
+      funcs: {
+        async poll () {
+          if (this.paused) return
+          try {
+            const r = await nova.http.get('/api/sensors')
+            this.temp  = { value: r.temp,  online: true }
+            this.humid = { value: r.humid, online: true }
+            this.lux   = { value: r.lux,   online: true }
+            this.volt  = { value: r.volt,  online: true }
+            this.online = true
+            this.updatedAt = new Date().toLocaleTimeString()
+          } catch (e) {
+            this.temp.online  = false
+            this.humid.online = false
+            this.lux.online   = false
+            this.volt.online  = false
+            this.online = false
+          }
+        }
+      }
+    })
+
+    // 立即拉一次 + 启动轮询
+    data.poll()
+    setInterval(function () { data.poll() }, 3000)
+  </script>
+</body>
+</html>

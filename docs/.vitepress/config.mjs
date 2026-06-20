@@ -76,7 +76,6 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    logo: { src: '/logo.svg', alt: 'novajs' },
     siteTitle: 'novajs',
 
     nav: [

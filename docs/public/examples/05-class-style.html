@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs · 05 动态 class / style</title>
+  <link rel="stylesheet" href="../../nova-style/nova-style.css">
+  <style>
+    /* === 演示用 CSS === */
+    .demo-box {
+      padding: 16px;
+      margin: 8px 0;
+      border-radius: 8px;
+      transition: all .2s;
+      background: #f1f5f9;
+    }
+    .demo-box.on  { background: #d1fae5; border-left: 4px solid #10b981; }
+    .demo-box.off { background: #fee2e2; border-left: 4px solid #ef4444; }
+    .demo-box.warn { box-shadow: 0 0 0 3px #fbbf24; }
+    .demo-box .label { font-weight: bold; }
+    .demo-box .hint  { font-size: 12px; color: #64748b; margin-top: 4px; }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .pill.live { background: #10b981; color: white; }
+    .pill.dead { background: #ef4444; color: white; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+
+  <div class="bg-white p-4 rounded-lg shadow mb-4">
+    <h1 class="text-lg font-bold">🎨 novajs 动态 class / style 演示</h1>
+    <p class="text-xs text-gray-500">下面 6 个 box 用不同语法绑定 class 和 style，状态由右上角控制实时变化</p>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="bg-white p-4 rounded-lg shadow mb-4 flex gap-2 flex-wrap text-sm">
+    <button @click="on = !on" class="px-3 py-1 rounded bg-blue-500 text-white border-0 cursor-pointer">toggle ON</button>
+    <button @click="warn = !warn" class="px-3 py-1 rounded bg-yellow-500 text-white border-0 cursor-pointer">toggle WARN</button>
+    <button @click="online = !online" class="px-3 py-1 rounded bg-green-500 text-white border-0 cursor-pointer">toggle ONLINE</button>
+    <span class="ml-auto text-gray-500 self-center">brightness: {{ brightness }}</span>
+    <input type="range" name="brightness" min="0" max="100" class="w-32">
+  </div>
+
+  <!-- 1. 对象语法 -->
+  <div class="demo-box"
+       :class="{ on: on, off: !on, warn: warn }">
+    <div class="label">① 对象语法</div>
+    <code class="text-xs">:class="{ on: on, off: !on, warn: warn }"</code>
+    <div class="hint">最常用。键是 class 名，值是布尔。</div>
+  </div>
+
+  <!-- 2. 数组语法 -->
+  <div class="demo-box"
+       :class="['base', on ? 'on' : 'off', warn ? 'warn' : '']">
+    <div class="label">② 数组语法</div>
+    <code class="text-xs">:class="['base', on ? 'on' : 'off', warn ? 'warn' : '']"</code>
+    <div class="hint">支持混合字符串 + 条件。</div>
+  </div>
+
+  <!-- 3. 数组里嵌对象 -->
+  <div class="demo-box"
+       :class="['base', { on: on, warn: warn }]">
+    <div class="label">③ 数组 + 对象混合</div>
+    <code class="text-xs">:class="['base', { on: on, warn: warn }]"</code>
+    <div class="hint">Vue 风格的灵活组合。</div>
+  </div>
+
+  <!-- 4. 与静态 class 合并 -->
+  <div class="demo-box on"
+       :class="{ warn: warn }">
+    <div class="label">④ 与静态 class 合并</div>
+    <code class="text-xs">class="demo-box on" :class="{ warn: warn }"</code>
+    <div class="hint">静态 class 保留，动态 class 叠加。</div>
+  </div>
+
+  <!-- 5. 字符串绑定 -->
+  <div class="demo-box"
+       :class="statusText">
+    <div class="label">⑤ 完整字符串</div>
+    <code class="text-xs">:class="statusText"  (值: "{{ statusText }}")</code>
+    <div class="hint">直接赋值整个 class 字符串。</div>
+  </div>
+
+  <!-- 6. 状态徽章（数组） -->
+  <div class="demo-box">
+    <div class="label">⑥ pill 徽章</div>
+    <span :class="['pill', online ? 'live' : 'dead']">
+      {{ online ? '● 在线' : '● 离线' }}
+    </span>
+    <code class="text-xs ml-2">:class="['pill', online ? 'live' : 'dead']"</code>
+  </div>
+
+  <!-- === style 演示 === -->
+  <div class="bg-white p-4 rounded-lg shadow mt-4">
+    <h2 class="text-base font-bold mb-2">动态 style</h2>
+
+    <!-- 7. style 对象语法：滑块控制宽度 + 透明度 -->
+    <div class="bg-gray-100 p-3 rounded mb-2">
+      <div class="text-xs text-gray-500 mb-1">⑦ 灯泡亮度（style 对象）</div>
+      <div class="w-16 h-16 rounded-full mx-auto"
+           :style="{
+             background: 'radial-gradient(circle, #fde047 ' + brightness + '%, #e5e7eb 100%)',
+             opacity: 0.3 + brightness / 130,
+             boxShadow: '0 0 ' + brightness/3 + 'px #fbbf24'
+           }">
+      </div>
+      <code class="text-xs block mt-2">:style="{ background: ..., opacity: ..., boxShadow: ... }"</code>
+    </div>
+
+    <!-- 8. style 字符串 -->
+    <div class="bg-gray-100 p-3 rounded mb-2">
+      <div class="text-xs text-gray-500 mb-1">⑧ 进度条（style 字符串）</div>
+      <div class="w-full h-4 bg-gray-200 rounded">
+        <div class="h-4 rounded transition-all"
+             :style="'width: ' + brightness + '%; background: ' + (brightness > 50 ? '#10b981' : '#3b82f6')">
+        </div>
+      </div>
+      <code class="text-xs block mt-2">:style="'width: ' + brightness + '%; ...'"</code>
+    </div>
+
+    <!-- 9. style 与静态合并 -->
+    <div class="bg-gray-100 p-3 rounded mb-2"
+         style="padding: 20px; border: 2px solid #cbd5e1;"
+         :style="{ borderColor: on ? '#10b981' : '#ef4444', background: on ? '#ecfdf5' : '#fef2f2' }">
+      <div class="text-xs text-gray-500 mb-1">⑨ 与静态 style 合并</div>
+      <code class="text-xs">style="padding: 20px; border: 2px solid #cbd5e1;" :style="{ borderColor: ... }"</code>
+      <div class="hint">静态 style 保留，动态 style 覆盖同名属性。</div>
+    </div>
+
+    <!-- 10. 单属性绑定 -->
+    <div class="bg-gray-100 p-3 rounded">
+      <div class="text-xs text-gray-500 mb-1">⑩ 旋转角度（动态 transform）</div>
+      <div class="w-12 h-12 bg-blue-500 mx-auto"
+           :style="{ transform: 'rotate(' + brightness * 3.6 + 'deg)' }">
+      </div>
+      <code class="text-xs block mt-2">:style="{ transform: 'rotate(' + brightness * 3.6 + 'deg)' }"</code>
+    </div>
+  </div>
+
+  <script src="../src/novajs.js"></script>
+  <script>
+    const data = nova({
+      data: {
+        on: true,
+        warn: false,
+        online: true,
+        brightness: 50
+      },
+      funcs: {
+        get statusText () {
+          var t = []
+          if (this.on) t.push('on')
+          if (this.warn) t.push('warn')
+          if (!this.on && !this.warn) t.push('off')
+          return t.join(' ')
+        }
+      }
+    })
+
+    console.log('novajs demo loaded · data:', data)
+  </script>
+</body>
+</html>

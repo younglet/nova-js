@@ -5,7 +5,10 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "terser src/novajs.js -c -m -o src/novajs.min.js",
+    "build": "terser src/novajs.js -c -m --comments false -o src/novajs.min.js",
+    "sync": "node scripts/sync-public.js",
+    "predocs:dev": "npm run build && npm run sync",
+    "predocs:build": "npm run build && npm run sync",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
