@@ -635,22 +635,7 @@
     }
   }
 
-  nova.throttle = function (fn, ms) {
-    var last = 0, timer = null
-    return function () {
-      var now = Date.now(), args = arguments, ctx = this
-      if (now - last >= ms) {
-        last = now
-        fn.apply(ctx, args)
-      } else {
-        clearTimeout(timer)
-        timer = setTimeout(function () {
-          last = Date.now()
-          fn.apply(ctx, args)
-        }, ms - (now - last))
-      }
-    }
-  }
+  nova.dom = function (sel) { return document.querySelector(sel) }
 
   nova.interval = function (fn, ms) {
     var id = null

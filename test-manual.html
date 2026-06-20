@@ -26,9 +26,8 @@
 </head>
 <body>
 
-  <!-- ══════ 基础反应式 ══════ -->
   <div class="card">
-    <h3>1. 基础反应式 {{ count }}</h3>
+    <h3>1. 基础反应式</h3>
     <div class="row">
       <span class="mono">count = <b>{{ count }}</b></span>
       <button @click="count++">+1</button>
@@ -37,9 +36,8 @@
     </div>
   </div>
 
-  <!-- ══════ $watch ══════ -->
   <div class="card">
-    <h3>2. $watch 监听</h3>
+    <h3>2. model 双向绑定</h3>
     <div class="row">
       <input model="name" placeholder="输入名字">
       <span class="mono">Hello, <b>{{ name }}</b>!</span>
@@ -47,7 +45,6 @@
     </div>
   </div>
 
-  <!-- ══════ 轮询模拟 ══════ -->
   <div class="card">
     <h3>3. nova.poll — 传感器轮询 <span if="sensors._loading" class="tag tag-blue">刷新中…</span></h3>
     <div class="row">
@@ -56,13 +53,12 @@
       <span class="dim">更新时间: {{ nova.fmt.time(sensors.ts) }}</span>
     </div>
     <div class="row" style="margin-top:8px">
-      <button @click="sensors._start()">▶ 开始轮询</button>
       <button @click="sensors._stop()">⏸ 停止</button>
+      <button @click="sensors._start()">▶ 恢复</button>
       <span if="sensors._error" class="tag tag-red">{{ sensors._error }}</span>
     </div>
   </div>
 
-  <!-- ══════ CRUD 模拟 ══════ -->
   <div class="card">
     <h3>4. nova.resource — 设备 CRUD <span if="devices._loading" class="tag tag-blue">操作中…</span></h3>
     <div loop="d in devices.list">
@@ -74,15 +70,14 @@
       </div>
     </div>
     <div class="row" style="margin-top:8px">
-      <input id="newName" placeholder="新设备名">
-      <button @click="addDevice()">+ 添加设备</button>
-      <button @click="simFail()">模拟失败</button>
+      <input model="newName" placeholder="新设备名">
+      <button @click="addDevice()">+ 添加</button>
+      <button class="danger" @click="simFail()">模拟失败回滚</button>
       <span if="devices._error" class="tag tag-red">{{ devices._error }}</span>
     </div>
-    <div class="dim" style="margin-top:8px">共 {{ devices.list.length }} 台设备</div>
+    <div class="dim" style="margin-top:8px">共 {{ devices.list.length }} 台</div>
   </div>
 
-  <!-- ══════ 时间格式化 ══════ -->
   <div class="card">
     <h3>5. nova.fmt 时间格式化</h3>
     <div class="row">
@@ -92,54 +87,36 @@
     </div>
   </div>
 
-  <!-- ══════ 节流 ══════ -->
-  <div class="card">
-    <h3>6. nova.throttle 节流</h3>
-    <div class="row">
-      <button id="throttleBtn">狂点我（节流 500ms）</button>
-      <span class="mono">实际执行: <b>{{ throttleCount }}</b> 次</span>
-    </div>
-  </div>
-
-  <!-- ══════ 调试输出 ══════ -->
   <div class="card">
     <h3>调试: nova.data 快照</h3>
     <pre>count: {{ count }}
 name: {{ name }}
-throttleCount: {{ throttleCount }}
-sensors.temp: {{ sensors.temp }}
-sensors.humid: {{ sensors.humid }}
+sensors.temp: {{ sensors.temp }}°C
+sensors.humid: {{ sensors.humid }}%
 devices.list: {{ devices.list.length }} 台</pre>
   </div>
 
 <script>
 // 模拟 fetch
-var _failMode = false
-var _deviceId = 0
+var _failMode = false, _deviceId = 0
 window.fetch = function(url, opts) {
   opts = opts || {}
   var u = typeof url === 'string' ? url : url.url
 
-  // 传感器接口
   if (u.includes('sensors')) {
     return new Promise(function(resolve) {
       setTimeout(function() {
         resolve({
           ok: true, status: 200, statusText: 'OK',
           headers: { get: function() { return 'application/json' } },
-          json: function() { return Promise.resolve({ temp: (20 + Math.random() * 10).toFixed(1), humid: (50 + Math.random() * 30).toFixed(0), _ts: Date.now() }) }
+          json: function() { return Promise.resolve({ temp: (20 + Math.random() * 10).toFixed(1), humid: (50 + Math.random() * 30).toFixed(0), ts: Date.now() }) }
         })
-      }, 200) // 模拟 200ms 网络延迟
+      }, 200)
     })
   }
 
-  // 设备 CRUD
   if (u.includes('devices')) {
-    // 模拟失败
-    if (_failMode) {
-      _failMode = false
-      return Promise.reject(new Error('网络错误'))
-    }
+    if (_failMode) { _failMode = false; return Promise.reject(new Error('网络错误')) }
     return new Promise(function(resolve) {
       setTimeout(function() {
         if (opts.method === 'GET') {
@@ -153,21 +130,17 @@ window.fetch = function(url, opts) {
   return Promise.reject(new Error('unknown'))
 }
 
-// 初始化 — 分块合并，模板里未挂载的字段自动静默，挂载后自动刷新
-nova({ data: { count: 0, name: 'world', now: Date.now(), throttleCount: 0 } })
+// 初始化
+nova({ data: { count: 0, name: 'world', newName: '', now: Date.now() } })
 nova.poll('/api/sensors', 3000, 'sensors')
 nova.resource('/api/devices', 'devices')
 nova({
   funcs: {
-    init: function() {
-      setInterval(function() { this.now = Date.now() }.bind(this), 30000)
-    },
     addDevice: function() {
-      var el = document.getElementById('newName')
-      var name = el ? el.value.trim() : ''
+      var name = (this.newName || '').trim()
       if (!name) return
       this.devices._create({ id: ++_deviceId, name: name })
-      if (el) el.value = ''
+      this.newName = ''
     },
     simFail: function() {
       _failMode = true
@@ -175,16 +148,6 @@ nova({
     }
   }
 })
-
-// 节流演示
-document.getElementById('throttleBtn').addEventListener('click',
-  nova.throttle(function() {
-    nova.data.throttleCount++
-  }, 500)
-)
-
-// 启动
-nova.data.init()
 </script>
 </body>
 </html>
