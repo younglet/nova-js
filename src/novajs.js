@@ -56,7 +56,10 @@
       has: function (t, k) {
         // with(proxy) 需要 has trap 才能找到 funcs
         if (methods && methods[k]) return true
-        return Reflect.has(t, k)
+        if (Reflect.has(t, k)) return true
+        // 不存在的 key 也建立追踪，后续挂载可触发重渲染
+        track(t, k)
+        return false
       },
       get: function (t, k) {
         if (k === '__nv') return true
@@ -145,10 +148,10 @@
     var fn
     try {
       if (mode === 'stmt') {
-        // 语句模式：如果 expr 是表达式而非赋值，return 它的值以拿到 Promise
-        fn = new Function('data', '$event', '$v', 'with(data){ return ' + expr + ' }')
+        // 语句模式：try/catch 兜底，未挂载字段不抛错，with(data) 的 has trap 已追踪依赖
+        fn = new Function('data', '$event', '$v', 'try { with(data){ return ' + expr + ' } } catch(e) { return undefined }')
       } else {
-        fn = new Function('data', 'with(data){ return (' + expr + ') }')
+        fn = new Function('data', 'try { with(data){ return (' + expr + ') } } catch(e) { return undefined }')
       }
     } catch (e) {
       console.warn('[novajs] bad expression:', expr, e)
@@ -494,20 +497,48 @@
   }
 
   /* ============== 6. nova() Entry ============== */
-  function nova(config) {
-    if (!_data) {
-      config = config || {}
+  function nova(config, ns) {
+    config = config || {}
+
+    // 合并模式：nova.data 已存在时，将新 data/funcs 并入已有实例（可选命名空间）
+    if (nova.data) {
+      var scope = nova.data
+      var target = scope
+      // 命名空间：创建/复用嵌套对象
+      if (ns) {
+        if (!(ns in scope)) scope[ns] = {}
+        target = scope[ns]
+      }
       var dataSpec = config.data || {}
       var funcsSpec = config.funcs || {}
-      _data = reactive(dataSpec, funcsSpec)
+      for (var dk in dataSpec) {
+        if (Object.prototype.hasOwnProperty.call(dataSpec, dk) && !(dk in target)) {
+          target[dk] = dataSpec[dk]
+        }
+      }
+      for (var fk in funcsSpec) {
+        if (Object.prototype.hasOwnProperty.call(funcsSpec, fk) && !(fk in target)) {
+          Object.defineProperty(target, fk, { value: funcsSpec[fk], writable: true, enumerable: false, configurable: true })
+        }
+      }
+      if (config.root) {
+        var newRoot = document.querySelector(config.root)
+        if (newRoot) walk(newRoot, scope)
+      }
+      return scope
     }
 
-    // $watch: data field change listener
-    _data.$watch = function (key, cb) {
+    // 首次创建
+    var dataSpec = config.data || {}
+    var funcsSpec = config.funcs || {}
+    var scope = reactive(dataSpec, funcsSpec)
+
+    // $watch: data field change listener (per-instance via closure)
+    scope.$watch = function (key, cb) {
       var fn = compile(key, 'expr')
       var oldVal, firstCall = true
       return effect(function () {
-        var newVal = fn(_data)
+        var newVal = fn(scope)
         if (firstCall) { oldVal = newVal; firstCall = false; return }
         if (!Object.is(newVal, oldVal)) {
           var old = oldVal
@@ -517,28 +548,31 @@
       })
     }
 
-    // Auto-scan: 立即扫一次（捕获已存在的 DOM），DOMContentLoaded 后再扫一次（捕获动态插入的）
+    // Auto-scan: 支持 config.root 限定 DOM 范围
+    var root = config.root ? document.querySelector(config.root) : (document.body || document.documentElement)
     var started = false
     var start = function () {
       if (started) return
       started = true
-      walk(document.body || document.documentElement)
+      walk(root, scope)
     }
     start()
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', start)
     }
 
-    // 暴露内部 _data 给自定义元素 / 高级用法
-    nova._data = _data
+    // 保有向后兼容：_data / nova.data 指向最后创建的实例
+    _data = scope
+    nova._data = scope
+    nova.data = scope
 
     // 派发 nova-ready 事件给自定义元素
     setTimeout(function () {
-      var evt = (typeof CustomEvent === 'function') ? new CustomEvent('nova-ready', { detail: { data: _data } }) : null
+      var evt = (typeof CustomEvent === 'function') ? new CustomEvent('nova-ready', { detail: { data: scope } }) : null
       if (evt && document) document.dispatchEvent(evt)
     }, 0)
 
-    return _data
+    return scope
   }
 
   /* ============== 7. nova.bind (programmatic) ============== */
@@ -598,6 +632,192 @@
       var args = arguments, ctx = this
       clearTimeout(t)
       t = setTimeout(function () { fn.apply(ctx, args) }, ms)
+    }
+  }
+
+  nova.throttle = function (fn, ms) {
+    var last = 0, timer = null
+    return function () {
+      var now = Date.now(), args = arguments, ctx = this
+      if (now - last >= ms) {
+        last = now
+        fn.apply(ctx, args)
+      } else {
+        clearTimeout(timer)
+        timer = setTimeout(function () {
+          last = Date.now()
+          fn.apply(ctx, args)
+        }, ms - (now - last))
+      }
+    }
+  }
+
+  nova.interval = function (fn, ms) {
+    var id = null
+    return {
+      start: function () { if (id === null) id = setInterval(fn, ms) },
+      stop:  function () { if (id !== null) { clearInterval(id); id = null } }
+    }
+  }
+
+  nova.timeout = function (fn, ms) {
+    var id = null
+    return {
+      start:  function () { if (id !== null) clearTimeout(id); id = setTimeout(fn, ms) },
+      cancel: function () { if (id !== null) { clearTimeout(id); id = null } }
+    }
+  }
+
+  /* ============== 9b. Data Sync ============== */
+  // 注入数据同步到 nova.data，可选命名空间（_前缀内部字段）
+
+  nova.poll = function (url, interval, ns) {
+    var proxy = nova.data
+    if (!proxy) return
+    interval = interval || 5000
+    var target = ns ? {} : proxy
+
+    target._loading = false
+    target._error = null
+
+    target._fetch = function () {
+      this._loading = true
+      return nova.http.get(url).then(function (res) {
+        for (var k in res) {
+          if (Object.prototype.hasOwnProperty.call(res, k) && k.charAt(0) !== '_') {
+            this[k] = res[k]
+          }
+        }
+        this._error = null
+      }.bind(this)).catch(function (e) {
+        this._error = e.message
+      }.bind(this)).then(function () {
+        this._loading = false
+      }.bind(this))
+    }
+
+    target._start = function () {
+      this._fetch()
+      this.__pollTimer = setInterval(this._fetch.bind(this), interval)
+    }
+
+    target._stop = function () {
+      clearInterval(this.__pollTimer)
+    }
+
+    if (ns) {
+      proxy[ns] = target
+      proxy[ns]._fetch()
+      proxy[ns]._start()
+    } else {
+      target._fetch()
+      target._start()
+    }
+  }
+
+  nova.resource = function (url, ns) {
+    var proxy = nova.data
+    if (!proxy) return
+    var target = ns ? {} : proxy
+
+    target.list = []
+    target._loading = false
+    target._error = null
+
+    target._fetch = function () {
+      this._loading = true
+      return nova.http.get(url).then(function (res) {
+        this.list = res
+      }.bind(this)).catch(function (e) {
+        this._error = e.message
+      }.bind(this)).then(function () {
+        this._loading = false
+      }.bind(this))
+    }
+
+    target._create = function (body) {
+      var temp = {}
+      for (var k in body) temp[k] = body[k]
+      temp.id = '_' + Date.now()
+      temp._pending = true
+      this.list.push(temp)
+      return nova.http.post(url, body).then(function (created) {
+        for (var i = 0; i < this.list.length; i++) {
+          if (this.list[i].id === temp.id) { this.list[i] = created; break }
+        }
+        return created
+      }.bind(this)).catch(function (e) {
+        this.list = this.list.filter(function (item) { return item.id !== temp.id })
+        this._error = e.message
+      }.bind(this))
+    }
+
+    target._update = function (id, body) {
+      var idx = -1
+      for (var i = 0; i < this.list.length; i++) { if (this.list[i].id === id) { idx = i; break } }
+      if (idx < 0) return Promise.resolve()
+      var prev = {}
+      for (var k2 in this.list[idx]) prev[k2] = this.list[idx][k2]
+      for (var k3 in body) this.list[idx][k3] = body[k3]
+      this.list[idx]._pending = true
+      return nova.http.put(url + '/' + id, body).then(function (updated) {
+        this.list[idx] = updated
+        return updated
+      }.bind(this)).catch(function (e) {
+        this.list[idx] = prev
+        this._error = e.message
+      }.bind(this))
+    }
+
+    target._delete = function (id) {
+      var idx = -1
+      for (var i = 0; i < this.list.length; i++) { if (this.list[i].id === id) { idx = i; break } }
+      if (idx < 0) return Promise.resolve()
+      var removed = this.list[idx]
+      this.list.splice(idx, 1)
+      return nova.http.del(url + '/' + id).catch(function (e) {
+        this.list.splice(idx, 0, removed)
+        this._error = e.message
+      }.bind(this))
+    }
+
+    if (ns) {
+      proxy[ns] = target
+      proxy[ns]._fetch()
+    } else {
+      target._fetch()
+    }
+  }
+
+  // 统一刷新
+  nova.update = function (ns) {
+    var proxy = nova.data
+    if (!proxy) return
+    var target = ns ? proxy[ns] : proxy
+    if (target && typeof target._fetch === 'function') target._fetch()
+  }
+
+  var fmtPad = function (n) { return n < 10 ? '0' + n : String(n) }
+
+  nova.fmt = {
+    time: function (ts, pattern) {
+      var d = new Date(ts)
+      if (isNaN(d.getTime())) return ''
+      pattern = pattern || 'HH:mm:ss'
+      var map = { YYYY: d.getFullYear(), MM: fmtPad(d.getMonth() + 1), DD: fmtPad(d.getDate()), HH: fmtPad(d.getHours()), mm: fmtPad(d.getMinutes()), ss: fmtPad(d.getSeconds()) }
+      var out = pattern
+      for (var k in map) { out = out.replace(k, map[k]) }
+      return out
+    },
+    date: function (ts) {
+      var d = new Date(ts)
+      if (isNaN(d.getTime())) return ''
+      return d.getFullYear() + '-' + fmtPad(d.getMonth() + 1) + '-' + fmtPad(d.getDate())
+    },
+    datetime: function (ts) {
+      var d = new Date(ts)
+      if (isNaN(d.getTime())) return ''
+      return d.getFullYear() + '-' + fmtPad(d.getMonth() + 1) + '-' + fmtPad(d.getDate()) + ' ' + fmtPad(d.getHours()) + ':' + fmtPad(d.getMinutes()) + ':' + fmtPad(d.getSeconds())
     }
   }
 
