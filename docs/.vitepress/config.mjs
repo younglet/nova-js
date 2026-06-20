@@ -25,16 +25,16 @@ function sidebarMain() {
     {
       text: '核心 API',
       items: [
-        { text: 'nova() 入口', link: '/api/nova' },
-        { text: 'data.$watch', link: '/api/watch' },
-        { text: 'nova.http', link: '/api/http' }
+        { text: 'nova() 入口', link: '/guide/api-nova' },
+        { text: 'data.$watch', link: '/guide/api-watch' },
+        { text: 'nova.http', link: '/guide/api-http' }
       ]
     },
     {
       text: '高级功能',
       items: [
-        { text: '轮询 & CRUD', link: '/api/sync' },
-        { text: '时间 / DOM 工具', link: '/api/utils' }
+        { text: '轮询 & CRUD', link: '/guide/api-sync' },
+        { text: '时间 / DOM 工具', link: '/guide/api-utils' }
       ]
     },
     {
@@ -81,13 +81,12 @@ export default defineConfig({
 
     nav: [
       { text: '指南', link: '/guide/', activeMatch: '/guide/' },
-      { text: '指令 & API', link: '/guide/directives/text', activeMatch: '/guide/directives/|/api/' },
+      { text: '指令 & API', link: '/guide/directives/text', activeMatch: '/guide/' },
       { text: '案例', link: '/examples/', activeMatch: '/examples/' }
     ],
 
     sidebar: {
       '/guide/': sidebarMain(),
-      '/api/': sidebarMain(),
       '/examples/': examplesSidebar()
     },
 
