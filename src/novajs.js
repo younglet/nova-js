@@ -803,6 +803,27 @@
       var d = new Date(ts)
       if (isNaN(d.getTime())) return ''
       return d.getFullYear() + '-' + fmtPad(d.getMonth() + 1) + '-' + fmtPad(d.getDate()) + ' ' + fmtPad(d.getHours()) + ':' + fmtPad(d.getMinutes()) + ':' + fmtPad(d.getSeconds())
+    },
+    // 数值格式化（百分比 / 千分位 / 定点）
+    number: function (v, decimals) {
+      var n = Number(v)
+      if (isNaN(n)) return ''
+      var d = typeof decimals === 'number' ? decimals : 0
+      return n.toFixed(d)
+    },
+    percent: function (v, decimals) {
+      var n = Number(v)
+      if (isNaN(n)) return ''
+      var d = typeof decimals === 'number' ? decimals : 0
+      return (n * 100).toFixed(d) + '%'
+    },
+    bytes: function (n) {
+      n = Number(n)
+      if (isNaN(n) || n < 0) return ''
+      if (n < 1024) return n + ' B'
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'
+      if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB'
+      return (n / 1073741824).toFixed(2) + ' GB'
     }
   }
 

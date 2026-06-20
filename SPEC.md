@@ -78,6 +78,18 @@ nova.debounce(fn, ms)                    // 防抖包装
 nova.nextTick(fn)                        // 下个 microtask
 nova.bind(path, selector, options?)       // 程序化绑定
 nova._data                                // 当前 data proxy（暴露给自定义元素）
+nova.dom(selector)                        // document.querySelector 简写
+nova.interval(fn, ms) → {start, stop}     // 可控定时器
+nova.timeout(fn, ms) → {start, cancel}    // 可控一次性定时器
+nova.poll(url, ms, ns?)                   // 轮询 GET 写入 data[ns]；返回 { stop, start, ns }
+nova.resource(url, ns)                    // CRUD 资源代理；返回 { list, get, post, put, del, _fetch, ... }
+nova.update(ns)                           // 手动触发资源刷新
+nova.fmt.time(ts, pattern?)               // 'HH:mm:ss' / 'YYYY-MM-DD HH:mm' ...
+nova.fmt.date(ts)                         // 'YYYY-MM-DD'
+nova.fmt.datetime(ts)                     // 'YYYY-MM-DD HH:mm:ss'
+nova.fmt.number(n, decimals?)             // 定点数 '24.6'
+nova.fmt.percent(n, decimals?)            // 百分比 '50%'
+nova.fmt.bytes(n)                         // '1.2 MB' / '345 B' / 自动进位
 ```
 
 `nova.http` 基于 fetch：
