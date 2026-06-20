@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>demo: loop</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f9fafb; }
+  .demo-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px #0001; max-width: 400px; margin: 0 auto; }
+  ul { list-style: none; padding: 0; margin: 12px 0; }
+  li { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f9fafb; border-radius: 6px; margin: 4px 0; }
+  .icon { font-size: 20px; margin-right: 8px; }
+  .name { flex: 1; }
+  .status { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; }
+  .status.on { background: #10b981; }
+  .toolbar { display: flex; gap: 8px; }
+  button { padding: 6px 12px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; cursor: pointer; font: inherit; font-size: 13px; }
+  button.danger { background: #ef4444; }
+  input { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font: inherit; flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="demo-card">
+  <div class="toolbar">
+    <input model="newName" placeholder="新设备名" @keyup.enter="add()">
+    <button @click="add()">添加</button>
+    <button class="danger" @click="allOff()">全关</button>
+  </div>
+
+  <ul>
+    <li loop="d in devices">
+      <span class="icon">{{ d.icon }}</span>
+      <span class="name">{{ d.name }}</span>
+      <span class="status {{ d.on ? 'on' : '' }}"></span>
+      <button @click="flip(d)">{{ d.on ? '开' : '关' }}</button>
+    </li>
+  </ul>
+
+  <div style="font-size:12px;color:#6b7280;margin-top:8px">
+    共 {{ devices.length }} 台，开启 {{ onCount }} 台
+  </div>
+</div>
+
+<script src="../../src/novajs.js"></script>
+<script>
+  nova({
+      data: { devices: [
+      { icon: '💡', name: '客厅灯', on: true },
+      { icon: '🌀', name: '风扇',   on: false },
+      { icon: '🌡', name: '温度计', on: false }
+    ], newName: '', get onCount () {
+      return this.devices.filter(d => d.on).length
+    } }, funcs: { flip (d) { d.on = !d.on }, add () {
+      if (!this.newName.trim()) return
+      this.devices.push({ icon: '📦', name: this.newName.trim(), on: false })
+      this.newName = ''
+    }, allOff () {
+      this.devices.forEach(d => { d.on = false })
+    } }
+  })
+</script>
+
+</body>
+</html>

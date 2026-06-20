@@ -1,0 +1,7 @@
+node_modules/
+dist/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
+# 桌面生成的临时文件
+novajs-bench-*

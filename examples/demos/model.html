@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>demo: model</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f9fafb; }
+  .demo-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px #0001; max-width: 360px; margin: 0 auto; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+  .row:last-child { border-bottom: 0; }
+  .label { color: #6b7280; font-size: 13px; }
+  .value { color: #111; font-weight: 500; }
+  .switch { position: relative; width: 44px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider { position: absolute; cursor: pointer; inset: 0; background: #d1d5db; border-radius: 12px; transition: 0.2s; }
+  .switch-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+  .switch input:checked + .switch-slider { background: #10b981; }
+  .switch input:checked + .switch-slider::before { transform: translateX(20px); }
+  select, input[type=text] { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font: inherit; }
+</style>
+</head>
+<body>
+
+<div class="demo-card">
+  <div class="row">
+    <span class="label">用户名</span>
+    <input type="text" model="name">
+  </div>
+  <div class="row">
+    <span class="label">开关</span>
+    <label class="switch">
+      <input type="checkbox" model="power">
+      <span class="switch-slider"></span>
+    </label>
+  </div>
+  <div class="row">
+    <span class="label">城市</span>
+    <select model="city">
+      <option value="beijing">北京</option>
+      <option value="shanghai">上海</option>
+      <option value="shenzhen">深圳</option>
+    </select>
+  </div>
+  <div class="row">
+    <span class="label">亮度（name 自动绑）</span>
+    <input type="range" name="brightness" min="0" max="100">
+  </div>
+
+  <div class="row" style="background:#f9fafb;padding:12px;border-radius:6px;margin-top:8px">
+    <span class="label">data：</span>
+    <span class="value">{{ JSON.stringify({name, power, city, brightness}) }}</span>
+  </div>
+</div>
+
+<script src="../../src/novajs.js"></script>
+<script>
+  nova({
+    data: {
+      name: 'alice',
+      power: true,
+      city: 'beijing',
+      brightness: 50
+    }
+  })
+</script>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs · 02 滑块调光</title>
+  <link rel="stylesheet" href="../../nova-style/nova-style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-white p-6 rounded-lg shadow w-full max-w-md">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <div class="text-xs text-gray-500">餐厅 · {{ light.id }}</div>
+        <div class="text-lg font-bold">{{ light.name }}</div>
+      </div>
+      <div class="text-3xl">💡</div>
+    </div>
+
+    <!-- 灯泡预览 -->
+    <div class="flex justify-center mb-6">
+      <div class="w-24 h-24 rounded-full transition-all"
+           :style="{
+             background: 'radial-gradient(circle, #fde047 ' + brightness + '%, #e5e7eb 100%)',
+             boxShadow: brightness > 0 ? '0 0 ' + (brightness / 2) + 'px ' + (brightness / 4) + 'px #fde047' : 'none'
+           }">
+      </div>
+    </div>
+
+    <!-- 滑块（用 name 自动 model） -->
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-xs text-gray-500 w-8">0</span>
+      <input type="range" name="brightness" min="0" max="100"
+             class="flex-1 cursor-pointer">
+      <span class="text-xs text-gray-500 w-8 text-right">100</span>
+    </div>
+
+    <!-- 数值 -->
+    <div class="text-center mb-3">
+      <span class="text-4xl font-bold">{{ brightness }}</span>
+      <span class="text-base text-gray-500"> %</span>
+    </div>
+
+    <!-- 同步状态 -->
+    <div class="flex items-center justify-center gap-2 text-xs">
+      <span class="w-2 h-2 rounded-full"
+            :class="syncing ? 'bg-yellow-500' : 'bg-green-500'"></span>
+      <span class="text-gray-500">
+        {{ syncing ? '上报中…' : '已同步 ' + lastSync }}
+      </span>
+    </div>
+  </div>
+
+  <script src="../src/novajs.js"></script>
+  <script>
+    // ============ Mock 后端 ============
+    ;(function () {
+      var mockDB = { 'dim-001': { value: 50 } }
+      var _get = nova.http.get, _put = nova.http.put
+      nova.http.get = async function (url) {
+        await new Promise(function (r) { setTimeout(r, 150) })
+        for (var k in mockDB) if (url.indexOf(k) >= 0) return Object.assign({}, mockDB[k])
+        return {}
+      }
+      nova.http.put = async function (url, body) {
+        await new Promise(function (r) { setTimeout(r, 200) })
+        for (var k in mockDB) if (url.indexOf(k) >= 0) {
+          if (body && body.value !== undefined) mockDB[k].value = body.value
+        }
+        return { ok: true }
+      }
+    })()
+
+    // ============ 应用 ============
+    const data = nova({
+      data: {
+        light: { id: 'dim-001', name: '餐厅吊灯' },
+        brightness: 50,
+        syncing: false,
+        lastSync: '--:--:--'
+      },
+      funcs: {
+        // 防抖上报：400ms 内只发最后一次
+        save: nova.debounce(async function () {
+          this.syncing = true
+          try {
+            await nova.http.put('/api/device/' + this.light.id + '/brightness', { value: this.brightness })
+            this.lastSync = new Date().toLocaleTimeString()
+          } finally {
+            this.syncing = false
+          }
+        }, 400)
+      }
+    })
+
+    // 监听 brightness 变化 → 触发 save
+    data.$watch('brightness', function () { data.save() })
+
+    // 初始化拉真实亮度
+    nova.http.get('/api/device/' + data.light.id).then(function (d) {
+      data.brightness = d.value != null ? d.value : 50
+    })
+  </script>
+</body>
+</html>

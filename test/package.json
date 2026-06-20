@@ -1,0 +1,12 @@
+{
+  "name": "novajs-test",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "dependencies": {
+    "jsdom": "^27.0.0"
+  }
+}
