@@ -89,27 +89,84 @@ nova({
 
 **为什么**：用户点开关的延迟容忍度是 100ms，但 HTTP 请求平均 200ms。如果等服务器返回才更新 UI，按钮会有明显卡顿。
 
-## 轮询 + lastUpdate
+## 轮询（nova.poll）
+
+一行搞定，自动开始，字段平铺：
 
 ```js
-nova({
-  data:  { sensors: [], lastUpdate: null },
-  funcs: {
-    async poll () {
-      const response = await nova.http.get('/api/sensors')
-      this.sensors = response.data          // 整体替换，触发列表重建
-      this.lastUpdate = new Date().toLocaleTimeString()
-    }
-  }
-})
-
-data.poll()
-setInterval(function () { data.poll() }, 3000)
+nova({ data: { ... } })
+nova.poll('/api/sensors', 3000, 'sensors')
 ```
 
-完整示例见 [03-sensors.html](../examples/03-sensors.html)。
+```html
+<span>{{ sensors.temp }}°C</span>
+<span if="sensors._loading">刷新中…</span>
+<span if="sensors._error">{{ sensors._error }}</span>
+```
 
-**技巧**：把 `lastUpdate` 也放 data 里，模板直接 `{{ lastUpdate }}` 显示——不用单独 `document.getElementById('xxx').textContent = ...`。
+手动控制：
+
+```js
+nova.data.sensors._stop()     // 暂停
+nova.data.sensors._start()    // 恢复
+nova.update('sensors')        // 立即刷新
+```
+
+## CRUD（nova.resource）
+
+乐观更新，失败回滚：
+
+```js
+nova({ data: { ... } })
+nova.resource('/api/devices', 'devices')
+```
+
+```html
+<div loop="d in devices.list">
+  <span :class="d._pending ? 'dim' : ''">{{ d.name }}</span>
+  <button @click="devices._update(d.id, {name: d.name + '★'})">改名</button>
+  <button @click="devices._delete(d.id)">删除</button>
+</div>
+<input model="newName">
+<button @click="addDevice()">添加</button>
+```
+
+```js
+funcs: {
+  addDevice() {
+    this.devices._create({ name: this.newName })
+    this.newName = ''
+  }
+}
+```
+
+## 多实例 & 命名空间
+
+```js
+// 分块初始化，自动合并
+nova({ data: { count: 0 } })
+nova({ data: { name: 'world' } })
+nova({ data: { temp: 25 } }, 'sensors')
+
+// nova.data.count → 0
+// nova.data.name → 'world'
+// nova.data.sensors.temp → 25
+
+// 多面板（各自独立 DOM 范围）
+nova({ root: '#panel-a', data: { ... } })
+nova({ root: '#panel-b', data: { ... } })
+```
+
+## 时间格式化
+
+```html
+{{ nova.fmt.date(ts) }}            <!-- 2026-06-20 -->
+{{ nova.fmt.time(ts) }}            <!-- 14:30:45 -->
+{{ nova.fmt.datetime(ts) }}        <!-- 2026-06-20 14:30:45 -->
+{{ nova.fmt.time(ts, 'HH:mm') }}   <!-- 14:30 -->
+```
+
+`nova.fmt` 是全局工具，模板表达式里直接用。
 
 ## HTTP 错误处理
 

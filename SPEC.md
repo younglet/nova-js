@@ -136,21 +136,18 @@ document.addEventListener('nova-ready', e => {
 })
 ```
 
-### 模块变量 `_data`（私有）
+### `nova.data`（公开引用）
 
 ```js
 // src/novajs.js 内部
-var _data = null
-
-function nova(config) {
-  if (!_data) {
-    _data = reactive(config.data || {}, config.funcs || {})
-  }
-  ...
+function nova(config, ns) {
+  // 首次创建，后续合并到 nova.data
+  if (nova.data) { /* merge */ }
+  else { nova.data = reactive(...) }
 }
 ```
 
-通过 `nova._data = _data` 暴露给自定义元素用。
+通过 `nova.data` 和 `nova._data`（别名）暴露。
 
 ## 8. 不做的事（明确）
 

@@ -1,11 +1,11 @@
-# `nova(config)`
+# `nova(config, ns?)`
 
-> 入口函数。声明响应式数据 + funcs，扫描 document 绑定指令，返回 proxy。
+> 入口函数。声明响应式数据 + funcs，扫描 DOM 绑定指令，返回 proxy。
 
 ## 签名
 
 ```js
-nova({ data?, funcs? }) → Proxy
+nova({ data?, funcs?, root? }, ns?) → Proxy
 ```
 
 ## 参数
@@ -38,106 +38,80 @@ nova({
     increment () { this.count++ },
     async load () {
       this.items = await nova.http.get('/api/x')
-    },
-    save: nova.debounce(async function () {
-      await nova.http.put('/api/save', this)
-    }, 400)
+    }
   }
 })
 ```
 
+### `config.root`（可选）
+
+限定 DOM 扫描范围：
+
+```js
+nova({ root: '#panel-a', data: { ... } })
+```
+
+### `ns`（可选）
+
+命名空间，用于合并模式。`nova({ data: { x: 1 } }, 'ns')` 存入 `nova.data.ns.x`。
+
 ## 返回值
 
-data proxy——一个 Proxy 对象，**所有读写都自动追踪依赖**。
+data proxy——所有读写都自动追踪依赖。
 
 ```js
 const data = nova({ data: { count: 0 } })
 
 data.count           // 读：触发 track
 data.count = 1       // 写：触发 trigger + DOM 更新
-data.user.name = 'x' // 嵌套对象也是 Proxy
 ```
+
+## 多实例 & 合并
+
+多次调用 `nova()` **不会覆盖**，而是合并到同一个实例：
+
+```js
+nova({ data: { count: 0 } })
+nova({ data: { name: 'world' } })
+// nova.data 同时有 count 和 name
+
+nova({ data: { temp: 25 } }, 'sensors')
+// nova.data.sensors.temp = 25
+```
+
+`nova.data` 永远指向当前实例。
 
 ## 行为细节
 
-### 单例
+### 自动扫描 DOM
 
-第二次调用 `nova(config)` 返回**同一个 proxy**：
+调用 `nova()` 时**立即扫描 `document.body`**（或 `config.root`），绑定所有 `{{ }}` / `model` / `if` / `loop` 等。
 
-```js
-const a = nova({ data: { x: 0 } })
-const b = nova({ data: { x: 99 } })
-a === b   // true
-```
+### funcs 不可枚举
 
-**第二次传的 config 整个被忽略**（但不会报错，方便测试或 HMR 时重置）。
+不出现在 `Object.keys(data)`、`for...in`、`JSON.stringify` 里。
 
-### 自动扫描 document
-
-调用 `nova()` 时**立即扫描 `document.body`**，绑定所有 `{{ }}` / `model` / `if` / `loop` 等。
-
-如果脚本在 `<head>` 里加载，DOMContentLoaded 时再扫一次（捕获动态插入的元素）。
-
-### funcs 的不可枚举性
-
-funcs 不出现在 `Object.keys(data)`、`for...in`、`JSON.stringify` 里：
+### 防误覆盖
 
 ```js
-Object.keys(data)                    // ['count', 'user', 'devices', ...]  不含 funcs
-JSON.stringify(data)                 // {"count":0,"user":{...},"devices":[...]}
-Object.getOwnPropertyDescriptor(data, 'increment').enumerable  // false
+data.increment = () => {}     // ❌ 第一次调用时抛 warn
+delete data.increment         // ❌ 同上
 ```
-
-**好处**：可以直接 `JSON.stringify(data)` 存 localStorage。
-
-### 防止误覆盖 funcs
-
-```js
-data.increment = () => {}     // ❌ 抛 TypeError（strict mode）
-delete data.increment         // ❌ 抛 TypeError
-```
-
-这两个操作都过不了 Proxy 的 set/delete trap。
-
-### `__methods__` 内部接口
-
-```js
-data.__methods__  // { increment: function, ... }
-```
-
-内部接口，给 `loop` 子作用域拷贝 funcs 用。**不要在业务代码里用**。
 
 ## 完整示例
 
 ```js
-// 完整定义一个 IoT 设备控制 app
-const data = nova({
-  data: {
-    device: { id: 'light-1', name: '客厅灯' },
-    power: false,
-    busy: false,
-    error: ''
-  },
+// 分块初始化
+nova({ data: { count: 0, name: 'world' } })
+
+// 挂载同步
+nova.poll('/api/sensors', 3000, 'sensors')
+nova.resource('/api/devices', 'devices')
+
+// 追加 funcs
+nova({
   funcs: {
-    async toggle () {
-      if (this.busy) return
-      this.busy = true
-      this.error = ''
-      try {
-        await nova.http.post('/api/device/' + this.device.id + '/toggle')
-        this.power = !this.power
-      } catch (e) {
-        this.error = e.message
-      } finally {
-        this.busy = false
-      }
-    }
+    toggle() { this.count++ }
   }
 })
 ```
-
-## 接下来
-
-- [`data.$watch`](./watch)
-- [`nova.http`](./http)
-- [工具函数](./utils)

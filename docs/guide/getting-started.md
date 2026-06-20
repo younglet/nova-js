@@ -18,7 +18,7 @@ title: 5 分钟上手
 
 ```html
 <script>
-  const data = nova({
+  nova({
     data:  { count: 0 },
     funcs: { increment () { this.count++ } }
   })
@@ -27,10 +27,21 @@ title: 5 分钟上手
 
 调用 `nova({...})`：
 - 创建 Proxy（自动响应式）
-- 扫描整个 document，绑定 `{{ }}` / `:attr` / `@event` 等指令
-- 返回 data proxy
+- 扫描 document，绑定 `{{ }}` / `:attr` / `@event` 等指令
+- 数据挂在 `nova.data` 上，也可以 `const data = nova(...)` 接返回值
 
-**`data` 里是数据，`funcs` 里是方法**——两者物理隔离，HTTP 写入不会误碰方法。
+**`data` 里是数据，`funcs` 里是方法**——两者物理隔离。
+
+多次调用 `nova()` 自动合并，支持命名空间：
+
+```js
+nova({ data: { count: 0 } })
+nova({ data: { name: 'world' } })
+// nova.data.count → 0, nova.data.name → 'world'
+
+nova.poll('/api/sensors', 3000, 'sensors')  // 一行接入轮询
+nova.resource('/api/devices', 'devices')     // 一行接入 CRUD
+```
 
 ## 步骤 ③：写模板
 
@@ -63,7 +74,7 @@ title: 5 分钟上手
 
   <script src="novajs.js"></script>
   <script>
-    const data = nova({
+    nova({
       data:  { count: 0, name: 'world' },
       funcs: { increment () { this.count++ } }
     })
