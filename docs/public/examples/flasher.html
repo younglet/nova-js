@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>下载到 ESP32 · novajs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui; background: #f0f2f5; padding: 24px; margin: 0; }
+    .flasher { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 18px; }
+    p { color: #6b7280; font-size: 13px; margin: 0 0 16px; }
+    button { display: block; width: 100%; padding: 12px; background: #10b981; color: #fff; border: 0; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #d1d5db; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #059669; }
+    .status { margin-top: 16px; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 13px; min-height: 24px; }
+    .status.error { background: #fef2f2; color: #b91c1c; }
+    .status.ok { background: #f0fdf4; color: #15803d; }
+    .progress { margin-top: 8px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #10b981; width: 0; transition: width 0.2s; }
+    .file-list { margin: 16px 0; padding: 12px; background: #f9fafb; border-radius: 6px; font-size: 12px; }
+    .file-list code { display: block; padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="flasher">
+    <h1>📥 下载到 ESP32 · novajs</h1>
+    <p>把 novajs.min.js + index.novajs.html 写到 ESP32 的 /static/ 目录</p>
+    <div class="file-list">
+      将要写入：
+      <code>/static/novajs.min.js</code>
+      <code>/static/index.novajs.html</code>
+    </div>
+    <button id="flash-btn">📥 下载到 ESP32</button>
+    <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+    <div class="status" id="status">准备就绪</div>
+  </div>
+
+  <script src="../../../scripts/esp32-serial.js"></script>
+  <script>
+    const btn = document.getElementById('flash-btn')
+    const status = document.getElementById('status')
+    const bar = document.getElementById('progress-bar')
+
+    function setStatus (msg, cls) {
+      status.textContent = msg
+      status.className = 'status' + (cls ? ' ' + cls : '')
+    }
+
+    function setProgress (pct) {
+      bar.style.width = Math.max(0, Math.min(100, pct)) + '%'
+    }
+
+    const FILES = [
+      { path: '/static/novajs.min.js', url: '/novajs.min.js' },
+      { path: '/static/index.novajs.html', url: '/index.novajs.html', generate: true }
+    ]
+
+    function generateIndexHtml () {
+      return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>novajs on ESP32</title>
+  <script src="novajs.min.js"></script>
+  <style>
+    body { font-family: system-ui; background: #f0f2f5; padding: 24px; }
+    .card { background: #fff; border-radius: 8px; padding: 16px; max-width: 400px; margin: 24px auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    .count { font-size: 48px; font-weight: 700; color: #10b981; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>novajs 反应式 demo</h1>
+    <div class="count">{{ count }}</div>
+    <button onclick="inc()" style="display:block;margin:12px auto 0;padding:8px 16px;background:#10b981;color:#fff;border:0;border-radius:6px;cursor:pointer;">+1</button>
+  </div>
+  <script>
+    nova({ data: { count: 0 }, funcs: { inc () { this.count++ } } })
+  </script>
+</body>
+</html>
+`
+    }
+
+    function strToBytes (str) {
+      return new TextEncoder().encode(str)
+    }
+
+    async function fileToBytes (entry) {
+      if (entry.generate) {
+        return strToBytes(generateIndexHtml())
+      }
+      const r = await fetch(entry.url)
+      if (!r.ok) throw new Error('下载 ' + entry.url + ' 失败：' + r.status)
+      const buf = await r.arrayBuffer()
+      return new Uint8Array(buf)
+    }
+
+    btn.addEventListener('click', async () => {
+      if (!navigator.serial) {
+        setStatus('当前浏览器不支持 Web Serial API，请用 Chrome / Edge / Opera。', 'error')
+        return
+      }
+      btn.disabled = true
+      setStatus('正在准备文件…')
+      setProgress(0)
+      let esp
+      try {
+        // 1. 预拉所有文件
+        const items = []
+        for (const entry of FILES) {
+          setStatus('准备 ' + entry.path + ' …')
+          const bytes = await fileToBytes(entry)
+          items.push({ path: entry.path, bytes })
+        }
+        // 2. 连接 ESP32
+        setStatus('点击浏览器弹窗选择 ESP32 串口…')
+        esp = new ESP32Serial()
+        await esp.connect()
+        // 3. 写文件
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i]
+          setStatus('写入 ' + it.path + '  (' + (i+1) + '/' + items.length + ')')
+          const base = (i / items.length) * 100
+          await esp.writeFile(it.path, it.bytes, pct => {
+            setProgress(base + (pct / items.length))
+          })
+        }
+        setProgress(100)
+        setStatus('✅ 写入完成！ESP32 端访问 http://<esp32-ip>/static/index.novajs.html', 'ok')
+      } catch (e) {
+        setStatus('❌ ' + (e.message || e), 'error')
+        console.error(e)
+      } finally {
+        if (esp) try { await esp.disconnect() } catch (_) {}
+        btn.disabled = false
+      }
+    })
+  </script>
+</body>
+</html>
