@@ -8,10 +8,10 @@
 
 约束：
 
-- **小** — 单文件 9KB min
+- **小** — 单文件 13KB min
 - **快** — Proxy 追踪 + microtask 批量 DOM 更新
 - **精简** — 6 个指令，没 JSX / Virtual DOM / 组件生命周期
-- **IoT 场景** — 内置 `nova.http`、`debounce`、`$watch`，适配轮询 / 滑块 / 设备开关
+- **IoT 场景** — 内置 `nova.http` / `nova.poll` / `nova.resource` / `nova.fmt`，适配轮询 / 滑块 / 设备开关
 
 **不是** SPA 框架。
 
@@ -67,6 +67,8 @@ nova({
 
 ## 5. 全局 API
 
+### HTTP / DOM 工具
+
 ```js
 nova.http.get(url, options?)              // GET
 nova.http.post(url, body, options?)       // POST
@@ -74,21 +76,38 @@ nova.http.put(url, body, options?)        // PUT
 nova.http.patch(url, body, options?)     // PATCH
 nova.http.del(url, options?)             // DELETE
 
-nova.debounce(fn, ms)                    // 防抖包装
-nova.nextTick(fn)                        // 下个 microtask
 nova.bind(path, selector, options?)       // 程序化绑定
-nova._data                                // 当前 data proxy（暴露给自定义元素）
 nova.dom(selector)                        // document.querySelector 简写
-nova.interval(fn, ms) → {start, stop}     // 可控定时器
-nova.timeout(fn, ms) → {start, cancel}    // 可控一次性定时器
-nova.poll(url, ms, ns?)                   // 轮询 GET 写入 data[ns]；返回 { stop, start, ns }
-nova.resource(url, ns)                    // CRUD 资源代理；返回 { list, get, post, put, del, _fetch, ... }
+nova._data                                // 当前 data proxy（暴露给自定义元素）
+```
+
+### 数据同步（IoT 场景）
+
+```js
+nova.poll(url, ms, ns?)                   // 轮询 GET 写入 data[ns]
+                                         // 返回 { stop, start, ns }
+nova.resource(url, ns)                    // CRUD 资源代理
+                                         // 返回 { list, get, post, put, del, _fetch, ... }
 nova.update(ns)                           // 手动触发资源刷新
+```
+
+### 定时器（可控启停）
+
+```js
+nova.interval(fn, ms) → { start, stop }   // 可控定时器
+nova.timeout(fn, ms) → { start, cancel }  // 可控一次性定时器
+nova.debounce(fn, ms)                     // 防抖包装
+nova.nextTick(fn)                         // 下个 microtask
+```
+
+### 格式化
+
+```js
 nova.fmt.time(ts, pattern?)               // 'HH:mm:ss' / 'YYYY-MM-DD HH:mm' ...
 nova.fmt.date(ts)                         // 'YYYY-MM-DD'
 nova.fmt.datetime(ts)                     // 'YYYY-MM-DD HH:mm:ss'
-nova.fmt.number(n, decimals?)             // 定点数 '24.6'
-nova.fmt.percent(n, decimals?)            // 百分比 '50%'
+nova.fmt.number(n, decimals?)             // 定点数 '24.6'（默认 0 位）
+nova.fmt.percent(n, decimals?)            // 百分比 '50%'（0.5 → '50%'，默认 0 位）
 nova.fmt.bytes(n)                         // '1.2 MB' / '345 B' / 自动进位
 ```
 
@@ -193,24 +212,28 @@ nova-js/
 ├── AGENTS.md           ← AI 助手指南
 ├── SPEC.md             ← 本文件
 ├── README.md
-├── package.json        ← build / docs / test 脚本
+├── package.json        ← build / sync / docs:dev / docs:build / test
 ├── src/
 │   ├── novajs.js       ← 核心
-│   └── novajs.min.js   ← 压缩
+│   └── novajs.min.js   ← 13 KB
 ├── test/               ← 84 个测试
+├── dev/                ← 手动测试工具（test-manual.html + mock-server.js）
 ├── examples/           ← 5 个完整例子 + 6 个指令 demo
-└── docs/               ← VitePress 文档
+├── scripts/            ← esp32-serial.js + sync-public.js
+├── index.novajs.html   ← ESP32 /static/ 入口 HTML
+├── Dockerfile          ← node:20-alpine + npm run docs:build
+└── docs/               ← VitePress 文档（5173 端口）
 ```
 
 ## 11. 配套生态
 
 | 项目 | 职责 | 大小 |
 |---|---|---|
-| novajs | 反应式内核 | 9 KB min |
-| nova-style | 原子 CSS | 12 KB |
-| nova-ui | 静态 + 动态组件 | 12 KB CSS + 11 KB JS |
-| nova-chart | 图表 | 18 KB |
+| novajs | 反应式内核 | 13 KB |
+| nova-style | 原子 CSS | 11 KB |
+| nova-ui | 静态 + 动态组件 | 18 KB CSS + 21 KB JS |
+| nova-chart | 图表 | 12 KB JS + 1.5 KB CSS |
 
-整套 ~62 KB，能扔进 4MB flash 的 ESP32。
+整套 ~76 KB，能扔进 4MB flash 的 ESP32。
 
 novajs 只做反应式。组件归 nova-ui，CSS 工具类归 nova-style，图表归 nova-chart。
