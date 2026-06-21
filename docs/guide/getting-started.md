@@ -6,7 +6,7 @@ title: 5 分钟上手
 
 > 跑通你的第一个 novajs 应用。
 
-<iframe src="/examples/flasher.html" width="100%" height="240" frameborder="0" style="border-radius:8px;margin-bottom:24px"></iframe>
+<Esp32Flasher project="novajs" />
 
 ## 步骤 ①：引入脚本
 

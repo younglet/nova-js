@@ -13,55 +13,17 @@
  *     /static/ 下的 index.html 互相覆盖
  *
  * 用法（前端）：
- *   <script src="../../scripts/esp32-serial.js"></script>
- *   <script>
- *     const esp = new ESP32Serial();
- *     await esp.connect();
- *     await esp.writeFile('/static/novajs.min.js', bytes, pct => {});
- *     await esp.disconnect();
- *   </script>
+ *   import esp32SerialCode from '.../esp32-serial.js?raw'
+ *   const fn = new Function('window','self', esp32SerialCode +
+ *     '\nreturn window.ESP32Serial')
+ *   const ESP32Serial = fn(window, window)
+ *   const esp = new ESP32Serial()
+ *   await esp.connect()
+ *   await esp.writeFile('/static/novajs.min.js', bytes, pct => {})
  *
  * 修改记录：
- *   2026-06-21  从 ssd1306_view 复制到 nova-frontend/nova-js/scripts/，
- *               上方 banner 改为 nova-js 特定说明，源码不动。
+ *   2026-06-21  从 ssd1306_view 复制；上方 banner 改为 nova-js 特定说明
  */
-
-/**
- * esp32-serial.js — Web Serial + MicroPython raw REPL v3.0
- *
- * Connects to ESP32 running MicroPython via Web Serial API.
- * Enters raw REPL mode, writes files to the device filesystem.
- *
- * Reference: esptool-js Transport patterns for robust serial handling.
- * Bundled esptool-js.js available for advanced flashing operations.
- *
- * Usage:
- *   <script src="js/esp32-serial.js"></script>
- *   const esp = new ESP32Serial();
- *   await esp.connect();
- *   await esp.writeFile('/nafs/demo.naf', arrayBuffer, pct => {});
- *   await esp.disconnect();
- */
-
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) { define([], factory); }
-  else if (typeof module === 'object' && module.exports) { module.exports = factory(); }
-  else { root.ESP32Serial = factory(); }
-}(typeof self !== 'undefined' ? self : this, function () {
-  'use strict';
-
-  const CTRL_C = '\r\x03';       // Interrupt
-  const CTRL_A = '\r\x01';       // Enter raw REPL
-  const CTRL_B = '\r\x02';       // Exit raw REPL
-  const CTRL_D = '\x04';         // Execute
-
-  const BAUD_RATE = 115200;
- *   const esp = new ESP32Serial();
- *   await esp.connect();
- *   await esp.writeFile('/nafs/demo.naf', arrayBuffer, pct => {});
- *   await esp.disconnect();
- */
-
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) { define([], factory); }
   else if (typeof module === 'object' && module.exports) { module.exports = factory(); }
