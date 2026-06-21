@@ -11,6 +11,14 @@
 | USB 数据线 | 一定要数据线，不是只充电的 |
 | 浏览器 | **Chrome / Edge / Opera**（Safari / Firefox 没有 Web Serial） |
 
+## 0. 前提
+
+| 硬件 | 说明 |
+|---|---|
+| ESP32 开发板 | WROOM-32 / WROVER / S3 都行，**至少 4MB flash** |
+| USB 数据线 | 一定要数据线，不是只充电的 |
+| 浏览器 | **Chrome / Edge / Opera**（Safari / Firefox 没有 Web Serial） |
+
 ## 1. 烧 MicroPython 固件
 
 ```bash
