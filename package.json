@@ -9,7 +9,7 @@
     "sync": "node scripts/sync-public.js",
     "predocs:dev": "npm run build && npm run sync",
     "predocs:build": "npm run build && npm run sync",
-    "docs:dev": "vitepress dev docs",
+    "docs:dev": "vitepress dev docs --port 5173 --host 0.0.0.0",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "test": "node test/run.js"
