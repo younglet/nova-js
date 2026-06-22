@@ -8,6 +8,9 @@ title: 5 分钟上手
 
 <Esp32Flasher project="novajs" />
 
+> 💡 **需要 MicroPython server？** 配套 [**nova-server**](../../../nova-server/) 是 10KB 的 ESP32 异步 Web 框架，与 novajs 深度集成。
+> 把本页的 HTML 文件放到 `/www/static/`，启动 nova-server 即可从手机访问。
+
 ## 步骤 ①：引入脚本
 
 ```html

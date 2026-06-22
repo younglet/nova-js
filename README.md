@@ -2,6 +2,7 @@
 
 > IoT 反应式内核。9KB min · 零依赖。
 > 给烧了 MicroPython 的 ESP32 当 HTTP server 时的前端三件套之一。
+> 后端配套 [nova-server](../nova-server)（MicroPython 异步 Web 框架）。
 > [SPEC.md](./SPEC.md) | [AGENTS.md](./AGENTS.md)
 
 ```html
@@ -228,4 +229,4 @@ novajs/
 
 ## 📜 License
 
-MIT
+powered by stemstar

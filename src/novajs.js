@@ -1,6 +1,6 @@
 /*!
  * novajs — Tiny Reactive Kernel
- * License: MIT
+ * 专为 NovaMP 2.0 设计 · powered by stemstar
  *
  * 用法:
  *   <script src="nova-js.js"></script>
