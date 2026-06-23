@@ -1,5 +1,8 @@
 import { defineConfig } from 'vitepress'
 
+// GitHub Pages project site uses /<repo>/ subpath; keep '/' for local dev.
+const base = process.env.GITHUB_ACTIONS ? '/nova-js/' : '/'
+
 function sidebarMain() {
   return [
     {
@@ -64,6 +67,7 @@ function examplesSidebar() {
 }
 
 export default defineConfig({
+  base,
   title: 'novajs',
   description: 'IoT 反应式内核。12KB min · 零依赖',
   lang: 'zh-CN',
