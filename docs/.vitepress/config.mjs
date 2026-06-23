@@ -93,11 +93,11 @@ export default defineConfig({
       {
         text: '生态',
         items: [
-          { text: 'novajs', link: 'http://novajs.localhost' },
-          { text: 'Nova Style', link: 'http://nova-style.localhost' },
-          { text: 'Nova UI', link: 'http://nova-ui.localhost' },
-          { text: 'NovaChart', link: 'http://nova-chart.localhost' },
-          { text: 'Nova Server', link: 'https://github.com/' }
+          { text: 'novajs', link: 'https://younglet.github.io/novajs/' },
+          { text: 'Nova Style', link: 'https://younglet.github.io/nova-style/' },
+          { text: 'Nova UI', link: 'https://younglet.github.io/nova-ui/' },
+          { text: 'NovaChart', link: 'https://younglet.github.io/nova-chart/' },
+          { text: 'Nova Server', link: 'https://younglet.github.io/nova-server/' }
         ]
       }
     ],
