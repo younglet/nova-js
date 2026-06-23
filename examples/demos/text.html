@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>demo: 文本插值</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f9fafb; }
+  .demo-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px #0001; max-width: 360px; margin: 0 auto; }
+  p { margin: 8px 0; }
+  b { color: #10b981; }
+  input { margin: 4px 0; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font: inherit; width: 100%; box-sizing: border-box; }
+  .ctrl { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e5e7eb; font-size: 12px; color: #6b7280; }
+  .ctrl label { display: block; margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<div class="demo-card">
+  <p>Hello, <b>{{ name }}</b>!</p>
+  <p>温度：<b>{{ temp }}°C</b></p>
+  <p>状态：<b>{{ online ? '🟢 在线' : '🔴 离线' }}</b></p>
+
+  <div class="ctrl">
+    <label>name: <input model="name"></label>
+    <label>temp: <input model="temp" type="number"></label>
+    <label><input model="online" type="checkbox"> online</label>
+  </div>
+</div>
+
+<script src="../../src/novajs.js"></script>
+<script>
+  nova({
+      data: { name: 'alice', temp: 24.5, online: true }
+  })
+</script>
+
+</body>
+</html>

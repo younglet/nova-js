@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>demo: @event</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f9fafb; }
+  .demo-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px #0001; max-width: 400px; margin: 0 auto; }
+  .counter { font-size: 48px; font-weight: bold; text-align: center; color: #10b981; padding: 16px 0; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+  button { padding: 8px 16px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; cursor: pointer; font: inherit; }
+  button.alt { background: #6366f1; }
+  button.danger { background: #ef4444; }
+  input { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font: inherit; flex: 1; }
+  .log { background: #f9fafb; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #6b7280; max-height: 100px; overflow-y: auto; margin-top: 12px; font-family: ui-monospace, monospace; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  h4 { margin: 12px 0 4px; font-size: 13px; color: #6b7280; font-weight: normal; }
+</style>
+</head>
+<body>
+
+<div class="demo-card">
+  <div class="counter">{{ count }}</div>
+
+  <h4>写法 A：调方法</h4>
+  <div class="toolbar">
+    <button @click="increment()">increment()</button>
+    <button class="alt" @click="decrement()">decrement()</button>
+    <button class="danger" @click="reset()">reset()</button>
+  </div>
+
+  <h4>写法 B：直接改 data</h4>
+  <div class="toolbar">
+    <button @click="count = count + 1">count = count + 1</button>
+    <button @click="count += 10">count += 10</button>
+  </div>
+
+  <h4>写法 C：$event 拿事件对象</h4>
+  <div class="row">
+    <input @input="onSearch($event.target.value)" placeholder="输入看日志">
+  </div>
+
+  <h4>写法 D：双向 + 触发</h4>
+  <div class="row">
+    <input model="count" type="number">
+  </div>
+
+  <div class="log" id="log"></div>
+</div>
+
+<script src="../../src/novajs.js"></script>
+<script>
+  nova({
+    data: { count: 0 },
+    funcs: {
+      increment () { this.count++ },
+      decrement () { this.count-- },
+      reset () { this.count = 0 },
+      onSearch (value) {
+        const logElement = document.getElementById('log')
+        logElement.innerHTML = '搜: ' + value + '<br>' + logElement.innerHTML
+      }
+    })
+</script>
+
+</body>
+</html>

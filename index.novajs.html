@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>novajs on ESP32</title>
+  <script src="novajs.min.js"></script>
+  <style>
+    body { font-family: system-ui; background: #f0f2f5; padding: 16px; margin: 0; }
+    .card { background: #fff; border-radius: 8px; padding: 16px; max-width: 400px; margin: 16px auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1 { font-size: 18px; margin: 0 0 12px; color: #111; }
+    .count { font-size: 48px; font-weight: 700; color: #10b981; text-align: center; line-height: 1; }
+    .label { text-align: center; color: #6b7280; font-size: 12px; margin-bottom: 8px; }
+    button { display: block; margin: 12px auto 0; padding: 8px 20px; background: #10b981; color: #fff; border: 0; border-radius: 6px; font-size: 14px; cursor: pointer; }
+    button:hover { background: #059669; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>novajs 反应式 demo</h1>
+    <div class="label">点击 +1 按钮，观察数字自动更新</div>
+    <div class="count">{{ count }}</div>
+    <button @click="count++">+1</button>
+  </div>
+
+  <script>
+    nova({ data: { count: 0 } })
+  </script>
+</body>
+</html>

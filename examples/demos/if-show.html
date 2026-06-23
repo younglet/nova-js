@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>demo: if / show</title>
+<style>
+  body { margin: 0; padding: 16px; font: 14px/1.5 -apple-system, sans-serif; background: #f9fafb; }
+  .demo-card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px #0001; max-width: 360px; margin: 0 auto; }
+  button { padding: 8px 16px; border: 0; border-radius: 6px; background: #10b981; color: #fff; cursor: pointer; font: inherit; }
+  button.off { background: #ef4444; }
+  .indicator { padding: 8px 12px; margin-top: 12px; border-radius: 6px; font-size: 13px; }
+  .indicator.if { background: #fef3c7; color: #92400e; }
+  .indicator.show { background: #dbeafe; color: #1e40af; }
+  .hint { font-size: 12px; color: #9ca3af; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="demo-card">
+  <button model="busy" class="{{ busy ? 'off' : '' }}">{{ busy ? '停止' : '开始' }}</button>
+
+  <div if="busy" class="indicator if">
+    ⏳ 通讯中…（if：节点从 DOM 移除）
+  </div>
+
+  <div show="busy" class="indicator show">
+    📡 状态指示（show：节点保留，加 display:none）
+  </div>
+
+  <div class="hint">
+    按 F12 看 DOM：<br>
+    if 节点在 busy=true 时存在，false 时被删<br>
+    show 节点一直在，只是隐藏
+  </div>
+</div>
+
+<script src="../../src/novajs.js"></script>
+<script>
+  nova({
+      data: { busy: false }
+  })
+</script>
+
+</body>
+</html>
