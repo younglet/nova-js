@@ -178,26 +178,24 @@ input.addEventListener('input', save)
 ```
 novajs/
 ├── src/
-│   └── novajs.js          ← 核心库（单文件 ~15KB，未压缩 ~5KB）
-├── examples/
+│   ├── novajs.js          ← 核心库（单文件 ~15KB，未压缩 ~5KB）
+│   ├── novajs.min.js      ← 压缩版（~9KB）
+│   └── nova-style.min.css ← 依赖（复制自 nova-style/src/）
+├── usage/
 │   ├── 01-toggle.html          ← 单设备开关（novajs + nova-style）
 │   ├── 02-slider.html          ← 滑块调光（防抖）
 │   ├── 03-live-sensors.html    ← 实时传感器（轮询）
+│   ├── 03-sensors.html         ← 同上别名
 │   ├── 04-device-grid.html     ← 多设备网格（loop）
 │   ├── 05-class-style.html     ← 动态 class / style
-│   └── with-nova-ui/           ← 上面 5 个用 nova-ui 组件重写的版本
-│       ├── 01-toggle.html
-│       ├── 02-slider.html
-│       ├── 03-live-sensors.html
-│       ├── 04-device-grid.html
-│       ├── 05-class-style.html
-│       └── README.md           ← 重构说明（推荐先看）
+│   ├── demos/                  ← 6 个指令 demo（bind/event/if-show/loop/model/text）
+│   └── index.novajs.html       ← ESP32 部署模板
 ├── SPEC.md                ← 设计规格（裸名指令、{data, funcs}、性能）
 ├── AGENTS.md              ← AI 助手项目指南
 └── README.md              ← 本文件
 ```
 
-> 💡 想看 novajs + nova-ui + nova-style 三件套怎么配合？打开 [`examples/with-nova-ui/`](./examples/with-nova-ui/) 里的 5 个 HTML，业务逻辑没变，HTML 用上了 `device-card` / `sensor-card` / `switch` / `status-dot` 等组件。
+> 💡 想看 novajs + nova-ui + nova-style 三件套怎么配合？直接看 [`nova-ui/usage/`](../../nova-ui/usage/) 里 10-custom-elements.html 起的那几个 HTML。
 
 ---
 

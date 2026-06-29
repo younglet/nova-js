@@ -218,9 +218,9 @@ nova-js/
 │   └── novajs.min.js   ← 13 KB
 ├── test/               ← 84 个测试
 ├── dev/                ← 手动测试工具（test-manual.html + mock-server.js）
-├── examples/           ← 5 个完整例子 + 6 个指令 demo
+├── usage/              ← 5 个完整例子 + 6 个指令 demo + index.novajs.html 部署模板
 ├── scripts/            ← esp32-serial.js + sync-public.js
-├── index.novajs.html   ← ESP32 /static/ 入口 HTML
+├── (index.novajs.html 已移入 usage/)  ESP32 /static/ 入口 HTML
 ├── Dockerfile          ← node:20-alpine + npm run docs:build
 └── docs/               ← VitePress 文档（5173 端口）
 ```

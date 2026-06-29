@@ -62,11 +62,11 @@ nova-js/
 │   ├── test-manual.html
 │   ├── mock-server.js
 │   └── README.md
-├── examples/                 ← 5 个完整例子 + 6 个指令 demo
+├── usage/                    ← 5 个完整例子 + 6 个指令 demo + ESP32 部署模板
 ├── scripts/
 │   ├── esp32-serial.js       ← Web Serial 写文件到 ESP32（来自 ssd1306_view）
-│   └── sync-public.js        ← 把 src / examples / index.novajs.html 同步到 docs/public/
-├── index.novajs.html         ← ESP32 /static/ 入口 HTML
+│   └── sync-public.js        ← 把 src / usage / usage/index.novajs.html 同步到 docs/public/
+├── (index.novajs.html 已移入 usage/)
 ├── Dockerfile                ← node:20-alpine + npm run docs:build
 └── docs/                     ← VitePress 站点（中文，5173 端口）
 ```
