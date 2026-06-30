@@ -1,5 +1,5 @@
 // scripts/sync-public.js
-// 把 src/ 和 examples/ 下的文件同步到 docs/public/，让 VitePress 能引用
+// 把 src/ 和 usage/ 下的文件同步到 docs/public/，让 VitePress 能引用
 // 用法：node scripts/sync-public.js
 // 在 docs:dev / docs:build 前自动调用（见 package.json scripts.prepublish）
 
@@ -45,14 +45,14 @@ if (fs.existsSync(srcDir)) {
 // 原因：iframe 里的 HTML 可能用 `../src/...` 相对路径
 copyDir(srcDir, path.join(root, 'docs/public/src'), null)
 
-// examples/*.html → docs/public/examples/
-copyDir(path.join(root, 'examples'), path.join(root, 'docs/public/examples'), ['.html'])
+// usage/*.html → docs/public/examples/
+copyDir(path.join(root, 'usage'), path.join(root, 'docs/public/examples'), ['.html'])
 
 // docs/examples/ → docs/public/examples/
 copyDir(path.join(root, 'docs/examples'), path.join(root, 'docs/public/examples'), ['.html'])
 
-// index.<name>.html → docs/public/
-const indexHtml = path.join(root, 'index.novajs.html')
+// usage/index.<name>.html → docs/public/
+const indexHtml = path.join(root, 'usage', 'index.novajs.html')
 if (fs.existsSync(indexHtml)) {
   copyFile(indexHtml, path.join(root, 'docs/public', 'index.novajs.html'))
 }
