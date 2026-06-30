@@ -67,6 +67,7 @@ function examplesSidebar() {
 }
 
 export default defineConfig({
+  repo: 'https://github.com/younglet/novajs',
   base,
   title: 'novajs',
   description: 'IoT 反应式内核。12KB min · 零依赖',
@@ -97,7 +98,8 @@ export default defineConfig({
           { text: 'Nova Style', link: 'https://younglet.github.io/nova-style/' },
           { text: 'Nova UI', link: 'https://younglet.github.io/nova-ui/' },
           { text: 'NovaChart', link: 'https://younglet.github.io/nova-chart/' },
-          { text: 'Nova Server', link: 'https://younglet.github.io/nova-server/' }
+          { text: 'Nova Server', link: 'https://younglet.github.io/nova-server/' },
+          { text: 'NovaMP 固件', link: 'https://younglet.github.io/novamp/' }
         ]
       }
     ],
@@ -107,9 +109,7 @@ export default defineConfig({
       '/examples/': examplesSidebar()
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/' }
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/younglet/novajs' }],
 
     footer: {
       message: '专为 NovaMP 2.0 设计 · powered by stemstar',

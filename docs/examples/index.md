@@ -16,7 +16,7 @@ title: 案例
 | 04 | [设备网格](./04-grid) | `loop` 多类型设备 + 乐观更新 + 状态点 |
 | 05 | [动态 class / style](./05-class-style) | `:class` 三种语法 + `:style` 对象语法 |
 
-> 组件用 nova-ui 的 `<nova-*>` 自定义元素（开关 / 滑块 / 旋钮 / 输入掩码 / 弹窗），看 [nova-ui 文档](https://github.com/)。
+> 组件用 nova-ui 的 `<nova-*>` 自定义元素（开关 / 滑块 / 旋钮 / 输入掩码 / 弹窗），看 [nova-ui 文档](https://github.com/younglet/nova-ui)。
 
 ## 跑起来
 
