@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: novajs
-  text: Tiny reactive kernel for ESP32.
-  tagline: 9KB min · 零依赖 · 烧 MicroPython 的 ESP32 当 server 时的前端反应式内核
+  text: ESP32 前端反应式内核
+  tagline: 9 KB min · 零依赖 · 烧 MicroPython 的 ESP32 当 server 时的前端反应式内核
   actions:
     - theme: brand
       text: 5 分钟上手
