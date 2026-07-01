@@ -1,7 +1,44 @@
+# Node / 构建
 node_modules/
 dist/
+*.tmp
+*.bak
+
+# VitePress 构建产物（每个 docs 项目都一样）
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 
-# 桌面生成的临时文件
-novajs-bench-*
+# IDE / 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS 临时
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志 & 密钥
+*.log
+.env
+.env.local
+.env.*.local
+
+# 运行时临时文件
+*.pid
+*.seed
+*.pid.lock
+
+# Python（nova-server 已经有；前端预留兼容）
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 历史归档（已完成迁移）
+_archive/
+
+# 项目特殊
+docs/.vitepress/dist/
+test/node_modules/

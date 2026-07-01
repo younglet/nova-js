@@ -1,5 +1,7 @@
 # novajs
 
+[![License](https://img.shields.io/github/license/younglet/nova-js)](https://github.com/younglet/nova-js/blob/main/LICENSE) [![GitHub stars](https://img.shields.io/github/stars/younglet/nova-js.svg)](https://github.com/younglet/nova-js) [![Docs](https://img.shields.io/badge/Docs-novajs.app-blueviolet.svg)](https://younglet.github.io/novajs/) ![Size](https://img.shields.io/badge/Size-9KB_min-orange.svg)
+
 > IoT 反应式内核。9KB min · 零依赖。
 > 给烧了 MicroPython 的 ESP32 当 HTTP server 时的前端三件套之一。
 > 后端配套 [nova-server](https://github.com/younglet/nova-server)（MicroPython 异步 Web 框架）。

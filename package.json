@@ -1,7 +1,7 @@
 {
   "name": "novajs",
   "version": "0.5.0",
-  "description": "Tiny reactive kernel for the frontend. ~9KB minified, zero-dep. Components live in nova-ui.",
+  "description": "IoT 反应式内核。9KB min · 零依赖。给烧了 MicroPython 的 ESP32 当 HTTP server 时用。",
   "type": "module",
   "scripts": {
     "build": "terser src/novajs.js -c -m --comments false -o src/novajs.min.js",
@@ -16,5 +16,23 @@
   "devDependencies": {
     "terser": "^5.48.0",
     "vitepress": "^1.6.3"
+  },
+  "license": "MIT",
+  "author": "stemstar <https://github.com/younglet>",
+  "private": false,
+  "keywords": [
+    "reactive",
+    "iot",
+    "microcontroller",
+    "esp32",
+    "micropython"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/younglet/novajs.git"
+  },
+  "homepage": "https://younglet.github.io/novajs/",
+  "bugs": {
+    "url": "https://github.com/younglet/novajs/issues"
   }
 }

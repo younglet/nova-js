@@ -70,7 +70,7 @@ export default defineConfig({
   repo: 'https://github.com/younglet/novajs',
   base,
   title: 'novajs',
-  description: 'IoT 反应式内核。12KB min · 零依赖',
+  description: 'IoT 反应式内核。9KB min · 零依赖 · 给烧了 MicroPython 的 ESP32 当 HTTP server 时用。',
   lang: 'zh-CN',
   lastUpdated: true,
   cleanUrls: true,
