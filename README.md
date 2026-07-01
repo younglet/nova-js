@@ -1,5 +1,6 @@
 # novajs
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![GitHub stars](https://img.shields.io/github/stars/younglet/nova-js.svg)](https://github.com/younglet/nova-js) [![Docs](https://img.shields.io/badge/Docs-novajs.app-blueviolet.svg)](https://younglet.github.io/novajs/) ![Size](https://img.shields.io/badge/Size-9KB_min-orange.svg)
 
 > IoT 反应式内核。9KB min · 零依赖。
