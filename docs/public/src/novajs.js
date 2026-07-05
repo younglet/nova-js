@@ -395,11 +395,13 @@
     }
 
     // if
+    // 注意：不能在这里 return —— bindIf 只是把元素从 DOM 摘下，effect 在条件为真时会重新挂回。
+    // 监听器/属性是挂在 JS 对象上的，因此 :attr / show / model / @event 仍然要继续绑定到这个元素，
+    // 等它重新挂回 DOM 时就会一起生效。否则 if 同行其它指令（如 @click / model）会全部失效。
     if (el.hasAttribute('if')) {
       var vif = el.getAttribute('if')
       el.removeAttribute('if')
       bindIf(el, vif, scope)
-      return
     }
 
     // :attr

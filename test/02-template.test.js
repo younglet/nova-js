@@ -190,6 +190,79 @@ describe('if', function () {
       eq(ctx.document.getElementById('x'), null)
     })
   })
+
+  // 回归测试：if 同行其它指令也必须被绑定（不能因为 if 块提前 return 而跳过）
+  it('binds @click on same element (initially visible)', function () {
+    const ctx = setup('<div><button id="b1" if="ok" @click="inc()">+</button></div>')
+    const data = ctx.nova({
+      data:  { ok: true, count: 0 },
+      funcs: { inc () { this.count++ } }
+    })
+    const btn = ctx.document.getElementById('b1')
+    ok(btn !== null, 'button mounted')
+    ok(!btn.hasAttribute('@click'), '@click attribute consumed')
+    btn.click()
+    eq(data.count, 1)
+  })
+
+  it('binds @click on same element after re-toggling visibility', function () {
+    const ctx = setup('<div><button id="b1" if="ok" @click="inc()">+</button></div>')
+    const data = ctx.nova({
+      data:  { ok: false, count: 0 },
+      funcs: { inc () { this.count++ } }
+    })
+    eq(ctx.document.getElementById('b1'), null, 'hidden initially')
+    data.ok = true
+    return ctx.tick().then(function () {
+      const btn = ctx.document.getElementById('b1')
+      ok(btn !== null, 'appears after ok=true')
+      btn.click()
+      eq(data.count, 1, 'click works after re-attached')
+      data.ok = false
+      return ctx.tick()
+    }).then(function () {
+      eq(ctx.document.getElementById('b1'), null, 'removed again')
+      data.ok = true
+      return ctx.tick()
+    }).then(function () {
+      const btn = ctx.document.getElementById('b1')
+      ok(btn !== null, 'appears again')
+      btn.click()
+      eq(data.count, 2, 'still works after multiple toggles')
+    })
+  })
+
+  it('binds model on same element', function () {
+    const ctx = setup('<div><input id="b1" if="ok" model="name"></div>')
+    const data = ctx.nova({ data: { ok: true, name: 'a' } })
+    const inp = ctx.document.getElementById('b1')
+    ok(inp !== null)
+    ok(!inp.hasAttribute('model'), 'model attribute consumed')
+    eq(inp.value, 'a')
+    inp.value = 'b'
+    inp.dispatchEvent(new ctx.window.Event('input'))
+    eq(data.name, 'b')
+  })
+
+  it('binds :attr on same element', function () {
+    const ctx = setup('<div><span id="b1" if="ok" :class="cls">x</span></div>')
+    const data = ctx.nova({ data: { ok: true, cls: 'red' } })
+    eq(ctx.document.getElementById('b1').getAttribute('class'), 'red')
+    data.cls = 'blue'
+    return ctx.tick().then(function () {
+      eq(ctx.document.getElementById('b1').getAttribute('class'), 'blue')
+    })
+  })
+
+  it('binds show on same element', function () {
+    const ctx = setup('<div><span id="b1" if="ok" show="on">x</span></div>')
+    const data = ctx.nova({ data: { ok: true, on: true } })
+    eq(ctx.document.getElementById('b1').style.display, '')
+    data.on = false
+    return ctx.tick().then(function () {
+      eq(ctx.document.getElementById('b1').style.display, 'none')
+    })
+  })
 })
 
 describe('show', function () {
