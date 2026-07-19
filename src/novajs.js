@@ -660,7 +660,7 @@
 
   nova.poll = function (url, interval, ns) {
     var proxy = nova.data
-    if (!proxy) return
+    if (!proxy) { nova({}); proxy = nova.data }
     interval = interval || 5000
     var target = ns ? {} : proxy
 
@@ -704,7 +704,7 @@
 
   nova.resource = function (url, ns) {
     var proxy = nova.data
-    if (!proxy) return
+    if (!proxy) { nova({}); proxy = nova.data }
     var target = ns ? {} : proxy
 
     target.list = []
