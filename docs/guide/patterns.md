@@ -112,31 +112,22 @@ nova.data.sensors._start()    // 恢复
 nova.update('sensors')        // 立即刷新
 ```
 
-## CRUD（nova.resource）
+## 单值 API（nova.api）
 
-乐观更新，失败回滚：
+直接读写一个值：
 
 ```js
-nova({ data: { ... } })
-nova.resource('/api/devices', 'devices')
+nova({ data: { v: '' } })
+nova.api('/api/msg', 'msg')
 ```
 
 ```html
-<div loop="d in devices.list">
-  <span :class="d._pending ? 'dim' : ''">{{ d.name }}</span>
-  <button @click="devices._update(d.id, {name: d.name + '★'})">改名</button>
-  <button @click="devices._delete(d.id)">删除</button>
-</div>
-<input model="newName">
-<button @click="addDevice()">添加</button>
+<p>{{ msg.value }}</p>
+<input model="v">
+<button @click="msg.post(v)">POST</button>
+<button @click="msg.put(v)">PUT</button>
+<button @click="msg.delete()">DELETE</button>
 ```
-
-```js
-funcs: {
-  addDevice() {
-    this.devices._create({ name: this.newName })
-    this.newName = ''
-  }
 }
 ```
 

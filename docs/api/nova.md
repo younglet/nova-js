@@ -106,7 +106,7 @@ nova({ data: { count: 0, name: 'world' } })
 
 // 挂载同步
 nova.poll('/api/sensors', 3000, 'sensors')
-nova.resource('/api/devices', 'devices')
+nova.api('/api/devices', 'devices')
 
 // 追加 funcs
 nova({

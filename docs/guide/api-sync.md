@@ -1,6 +1,6 @@
 # 数据同步 API
 
-> `nova.poll()` — 轮询 / `nova.resource()` — CRUD / `nova.update()` — 手动刷新
+> `nova.poll()` — 轮询 / `nova.api()` — API 绑定 / `nova.update()` — 手动刷新
 
 ## nova.poll(url, interval, ns?)
 
@@ -41,45 +41,38 @@ nova.update('sensors')      // 等价上行
 
 ---
 
-## nova.resource(url, ns?)
+## nova.api(url, ns?)
 
-CRUD 接口，自动拉取列表，乐观更新 + 失败回滚。
+绑定一个 REST 接口到命名空间，提供 `get` / `post` / `put` / `delete` 方法，数据存在 `value` 里。
 
 ```js
-nova.resource('/api/devices', 'devices')
+nova.api('/api/msg', 'msg')
 ```
 
 ```html
-<div loop="d in devices.list">
-  <span :class="d._pending ? 'dim' : ''">{{ d.name }}</span>
-  <button @click="devices._update(d.id, {name: d.name + '★'})">改名</button>
-  <button @click="devices._delete(d.id)">删除</button>
-</div>
-<input model="newName">
-<button @click="addDevice()">添加</button>
+<p>{{ msg.value }}</p>
+<input model="v">
+<button @click="msg.post(v)">POST</button>
+<button @click="msg.put(v)">PUT</button>
+<button @click="msg.delete()">DELETE</button>
 ```
-
-```js
-funcs: {
-  addDevice() {
-    this.devices._create({ name: this.newName })
-    this.newName = ''
-  }
-}
-```
-
-### 乐观更新
-
-`_create`、`_update`、`_delete` 先改本地 UI 再发 HTTP，失败自动回滚。同步中的项会带 `_pending: true`。
 
 ### 方法
 
-| 方法 | 说明 |
+| 方法 | HTTP | 说明 |
+|---|---|---|
+| `get()` | GET | 拉取数据，存到 `value` |
+| `post(body)` | POST | 创建/发送数据 |
+| `put(body)` | PUT | 更新数据 |
+| `delete()` | DELETE | 删除/清空数据 |
+
+### 内部字段
+
+| 字段 | 说明 |
 |---|---|
-| `_fetch()` | 拉取列表 |
-| `_create(body)` | 乐观添加 |
-| `_update(id, body)` | 乐观更新 |
-| `_delete(id)` | 乐观删除 |
+| `value` | GET 获取的数据 |
+| `_loading` | 请求中 |
+| `_error` | 错误信息 |
 
 ---
 
@@ -88,6 +81,6 @@ funcs: {
 手动刷新命名空间：
 
 ```js
-nova.update('sensors')   // 调 sensors._fetch()
-nova.update()            // 调根级 _fetch()
+nova.update('sensors')   // 调 sensors.get()
+nova.update()            // 调根级 get()
 ```

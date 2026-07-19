@@ -11,7 +11,7 @@
 - **小** — 单文件 13KB min
 - **快** — Proxy 追踪 + microtask 批量 DOM 更新
 - **精简** — 6 个指令，没 JSX / Virtual DOM / 组件生命周期
-- **IoT 场景** — 内置 `nova.http` / `nova.poll` / `nova.resource` / `nova.fmt`，适配轮询 / 滑块 / 设备开关
+- **IoT 场景** — 内置 `nova.http` / `nova.poll` / `nova.api` / `nova.fmt`，适配轮询 / 滑块 / 设备开关
 
 **不是** SPA 框架。
 
@@ -86,8 +86,8 @@ nova._data                                // 当前 data proxy（暴露给自定
 ```js
 nova.poll(url, ms, ns?)                   // 轮询 GET 写入 data[ns]
                                          // 返回 { stop, start, ns }
-nova.resource(url, ns)                    // CRUD 资源代理
-                                         // 返回 { list, get, post, put, del, _fetch, ... }
+nova.api(url, ns)                         // REST API 代理
+                                         // 返回 { value, get, post, put, del, ... }
 nova.update(ns)                           // 手动触发资源刷新
 ```
 

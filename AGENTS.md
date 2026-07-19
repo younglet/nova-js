@@ -17,7 +17,7 @@
 | 小 | 单文件 18KB 源码 / 13KB min |
 | 快 | Proxy 追踪 + microtask 批量更新 |
 | 精简 | 6 个指令，没 JSX、没虚拟 DOM、没生命周期 |
-| IoT 场景 | 内置 `nova.http` / `nova.poll` / `nova.resource` / `nova.fmt` / `debounce` |
+| IoT 场景 | 内置 `nova.http` / `nova.poll` / `nova.api` / `nova.fmt` / `debounce` |
 
 **不是** SPA 框架，不做大型工程。
 

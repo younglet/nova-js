@@ -9,14 +9,7 @@ const PORT = 5000
 
 // 传感器数据（模拟波动）
 let sensorData = { temp: 25.3, humid: 62, ts: Date.now() }
-
-// 设备列表
-let devices = [
-  { id: 1, name: '客厅灯' },
-  { id: 2, name: '空调' },
-  { id: 3, name: '窗帘' }
-]
-let nextId = 4
+let msg = 'hello'
 
 function json(res, code, data) {
   res.writeHead(code, {
@@ -29,7 +22,6 @@ function json(res, code, data) {
 }
 
 const server = http.createServer(function (req, res) {
-  // CORS preflight
   if (req.method === 'OPTIONS') return json(res, 204, '')
 
   const url = new URL(req.url, 'http://' + req.headers.host)
@@ -37,62 +29,35 @@ const server = http.createServer(function (req, res) {
 
   // ─── 传感器轮询 ───
   if (path === '/api/sensors') {
-    // 模拟温度波动
     sensorData.temp = +(25 + Math.sin(Date.now() / 5000) * 3 + Math.random() * 0.5).toFixed(1)
     sensorData.humid = +(60 + Math.cos(Date.now() / 8000) * 10 + Math.random() * 2).toFixed(0)
     sensorData.ts = Date.now()
     return json(res, 200, sensorData)
   }
 
-  // ─── 设备 CRUD ───
-  if (path === '/api/devices') {
+  // ─── 单值 API ───
+  if (path === '/api/msg') {
     if (req.method === 'GET') {
-      return json(res, 200, devices)
+      return json(res, 200, msg)
     }
-    if (req.method === 'POST') {
-      let body = ''
-      req.on('data', function (c) { body += c })
-      req.on('end', function () {
-        try {
-          const item = JSON.parse(body)
-          item.id = nextId++
-          devices.push(item)
-          json(res, 201, item)
-        } catch (e) {
-          json(res, 400, { error: e.message })
+    let body = ''
+    req.on('data', function (c) { body += c })
+    req.on('end', function () {
+      try {
+        if (req.method === 'POST' || req.method === 'PUT') {
+          msg = JSON.parse(body)
+          return json(res, req.method === 'POST' ? 201 : 200, msg)
         }
-      })
-      return
-    }
-  }
-
-  // PUT /api/devices/:id
-  const devMatch = path.match(/^\/api\/devices\/(\d+)$/)
-  if (devMatch) {
-    const id = parseInt(devMatch[1])
-    const idx = devices.findIndex(function (d) { return d.id === id })
-
-    if (req.method === 'PUT') {
-      if (idx < 0) return json(res, 404, { error: 'not found' })
-      let body = ''
-      req.on('data', function (c) { body += c })
-      req.on('end', function () {
-        try {
-          const patch = JSON.parse(body)
-          devices[idx] = Object.assign(devices[idx], patch)
-          json(res, 200, devices[idx])
-        } catch (e) {
-          json(res, 400, { error: e.message })
+        if (req.method === 'DELETE') {
+          msg = ''
+          return json(res, 200, '')
         }
-      })
-      return
-    }
-
-    if (req.method === 'DELETE') {
-      if (idx < 0) return json(res, 404, { error: 'not found' })
-      devices.splice(idx, 1)
-      return json(res, 200, { ok: true })
-    }
+        json(res, 405, { error: 'method not allowed' })
+      } catch (e) {
+        json(res, 400, { error: e.message })
+      }
+    })
+    return
   }
 
   json(res, 404, { error: 'not found' })
@@ -100,15 +65,12 @@ const server = http.createServer(function (req, res) {
 
 server.listen(PORT, HOST, function () {
   console.log('Mock API running at http://' + HOST + ':' + PORT)
-  console.log('  GET  /api/sensors      — 传感器数据（温度湿度波动）')
-  console.log('  GET  /api/devices      — 设备列表')
-  console.log('  POST /api/devices      — 添加设备')
-  console.log('  PUT  /api/devices/:id  — 更新设备')
-  console.log('  DEL  /api/devices/:id  — 删除设备')
+  console.log('  GET  /api/sensors      — 传感器数据')
+  console.log('  GET/POST/PUT/DEL /api/msg — 单值 API')
   console.log()
   console.log('打开 test-manual.html，在浏览器控制台输入:')
   console.log('  nova.poll(\'/api/sensors\', 3000, \'sensors\')')
-  console.log('  nova.resource(\'/api/devices\', \'devices\')')
-  console.log('  nova.update(\'sensors\')')   // 等价 sensors._fetch()
-  console.log('  nova.update(\'devices\')')   // 等价 devices._fetch()
+  console.log('  nova.api(\'/api/msg\', \'msg\')')
+  console.log('  nova.update(\'sensors\')')
+  console.log('  nova.update(\'msg\')')
 })

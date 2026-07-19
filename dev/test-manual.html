@@ -60,22 +60,18 @@
   </div>
 
   <div class="card">
-    <h3>4. nova.resource — 设备 CRUD <span if="devices._loading" class="tag tag-blue">操作中…</span></h3>
-    <div loop="d in devices.list">
-      <div class="row" style="margin-bottom:6px; align-items:center" :class="d._pending ? 'tag tag-blue' : ''">
-        <span class="mono">[{{ d.id }}] {{ d.name }}</span>
-        <span if="d._pending" class="tag tag-blue">同步中…</span>
-        <button @click="devices._update(d.id, {name: d.name + '★'})">改名</button>
-        <button class="danger" @click="devices._delete(d.id)">删除</button>
-      </div>
+    <h3>4. nova.api — 单值 API <span if="msg._loading" class="tag tag-blue">请求中…</span></h3>
+    <div class="row">
+      <span class="mono">当前值: <b>{{ msg.value }}</b></span>
     </div>
     <div class="row" style="margin-top:8px">
-      <input model="newName" placeholder="新设备名">
-      <button @click="addDevice()">+ 添加</button>
-      <button class="danger" @click="simFail()">模拟失败回滚</button>
-      <span if="devices._error" class="tag tag-red">{{ devices._error }}</span>
+      <input model="v" placeholder="输入值">
+      <button @click="msg.get()">GET</button>
+      <button @click="msg.post(v)">POST</button>
+      <button @click="msg.put(v)">PUT</button>
+      <button @click="msg.delete()">DELETE</button>
+      <span if="msg._error" class="tag tag-red">{{ msg._error }}</span>
     </div>
-    <div class="dim" style="margin-top:8px">共 {{ devices.list.length }} 台</div>
   </div>
 
   <div class="card">
@@ -131,23 +127,9 @@ window.fetch = function(url, opts) {
 }
 
 // 初始化
-nova({ data: { count: 0, name: 'world', newName: '', now: Date.now() } })
+nova({ data: { count: 0, name: 'world', v: '', now: Date.now() } })
 nova.poll('/api/sensors', 3000, 'sensors')
-nova.resource('/api/devices', 'devices')
-nova({
-  funcs: {
-    addDevice: function() {
-      var name = (this.newName || '').trim()
-      if (!name) return
-      this.devices._create({ id: ++_deviceId, name: name })
-      this.newName = ''
-    },
-    simFail: function() {
-      _failMode = true
-      this.devices._create({ id: ++_deviceId, name: '应该回滚' })
-    }
-  }
-})
+nova.api('/api/msg', 'msg')
 </script>
 </body>
 </html>

@@ -45,7 +45,7 @@ nova({ data: { name: 'world' } })
 // nova.data.count → 0, nova.data.name → 'world'
 
 nova.poll('/api/sensors', 3000, 'sensors')  // 一行接入轮询
-nova.resource('/api/devices', 'devices')     // 一行接入 CRUD
+nova.api('/api/msg', 'msg')            // REST API 绑定
 ```
 
 ## 步骤 ③：写模板

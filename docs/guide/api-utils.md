@@ -95,7 +95,7 @@ nova.dom('#myInput').focus()
 
 ---
 
-## nova.poll / nova.resource
+## nova.poll / nova.api
 
 数据同步。自动开始，字段平铺到命名空间。
 
@@ -104,29 +104,28 @@ nova.dom('#myInput').focus()
 nova.poll('/api/sensors', 3000, 'sensors')
 // → nova.data.sensors.temp, .humid, ._loading, ._error
 
-// CRUD + 乐观更新
-nova.resource('/api/devices', 'devices')
-// → nova.data.devices.list, ._create(), ._update(), ._delete()
+// 单值 API（GET/POST/PUT/DELETE）
+nova.api('/api/msg', 'msg')
+// → nova.data.msg.value, .get(), .post(), .put(), .delete()
 
 // 模板
 {{ sensors.temp }}°C
-{{ devices.list.length }} 台
+{{ msg.value }}
 
 // 方法
-devices._create({ name: '新设备' })
-devices._update(id, { name: '改名' })
-devices._delete(id)
+msg.get()
+msg.post({ text: '新值' })
+msg.put({ text: '修改' })
+msg.delete()
 ```
 
-**内部字段**（`_` 前缀，API 自动覆写）：
+**内部字段**（`_` 前缀）：
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
+| `value` | Any | GET 获取的数据 |
 | `_loading` | Boolean | 请求中 |
 | `_error` | String | 错误信息 |
-| `_data` | Object | poll 服务端原始返回（不推荐直接读） |
-
-**乐观更新**：`_create`、`_update`、`_delete` 先改本地 UI 再发 HTTP，失败自动回滚。`_pending` 标记同步中的项。
 
 ---
 
@@ -135,6 +134,6 @@ devices._delete(id)
 手动刷新命名空间：
 
 ```js
-nova.update('sensors')   // 调 sensors._fetch()
-nova.update()            // 调根级 _fetch()
+nova.update('sensors')   // 调 sensors.get()
+nova.update()            // 调根级 get()
 ```

@@ -702,19 +702,19 @@
     }
   }
 
-  nova.resource = function (url, ns) {
+  nova.api = function (url, ns) {
     var proxy = nova.data
     if (!proxy) { nova({}); proxy = nova.data }
     var target = ns ? {} : proxy
 
-    target.list = []
+    target.value = null
     target._loading = false
     target._error = null
 
-    target._fetch = function () {
+    target.get = function () {
       this._loading = true
       return nova.http.get(url).then(function (res) {
-        this.list = res
+        this.value = res
       }.bind(this)).catch(function (e) {
         this._error = e.message
       }.bind(this)).then(function () {
@@ -722,57 +722,46 @@
       }.bind(this))
     }
 
-    target._create = function (body) {
-      var temp = {}
-      for (var k in body) temp[k] = body[k]
-      temp.id = '_' + Date.now()
-      temp._pending = true
-      this.list.push(temp)
+    target.post = function (body) {
+      this._loading = true
       return nova.http.post(url, body).then(function (created) {
-        for (var i = 0; i < this.list.length; i++) {
-          if (this.list[i].id === temp.id) { this.list[i] = created; break }
-        }
+        this.value = created
         return created
       }.bind(this)).catch(function (e) {
-        this.list = this.list.filter(function (item) { return item.id !== temp.id })
         this._error = e.message
+      }.bind(this)).then(function () {
+        this._loading = false
       }.bind(this))
     }
 
-    target._update = function (id, body) {
-      var idx = -1
-      for (var i = 0; i < this.list.length; i++) { if (this.list[i].id === id) { idx = i; break } }
-      if (idx < 0) return Promise.resolve()
-      var prev = {}
-      for (var k2 in this.list[idx]) prev[k2] = this.list[idx][k2]
-      for (var k3 in body) this.list[idx][k3] = body[k3]
-      this.list[idx]._pending = true
-      return nova.http.put(url + '/' + id, body).then(function (updated) {
-        this.list[idx] = updated
+    target.put = function (body) {
+      this._loading = true
+      return nova.http.put(url, body).then(function (updated) {
+        this.value = updated
         return updated
       }.bind(this)).catch(function (e) {
-        this.list[idx] = prev
         this._error = e.message
+      }.bind(this)).then(function () {
+        this._loading = false
       }.bind(this))
     }
 
-    target._delete = function (id) {
-      var idx = -1
-      for (var i = 0; i < this.list.length; i++) { if (this.list[i].id === id) { idx = i; break } }
-      if (idx < 0) return Promise.resolve()
-      var removed = this.list[idx]
-      this.list.splice(idx, 1)
-      return nova.http.del(url + '/' + id).catch(function (e) {
-        this.list.splice(idx, 0, removed)
+    target.delete = function () {
+      this._loading = true
+      return nova.http.del(url).then(function () {
+        this.value = null
+      }.bind(this)).catch(function (e) {
         this._error = e.message
+      }.bind(this)).then(function () {
+        this._loading = false
       }.bind(this))
     }
 
     if (ns) {
       proxy[ns] = target
-      proxy[ns]._fetch()
+      proxy[ns].get()
     } else {
-      target._fetch()
+      target.get()
     }
   }
 
@@ -781,7 +770,7 @@
     var proxy = nova.data
     if (!proxy) return
     var target = ns ? proxy[ns] : proxy
-    if (target && typeof target._fetch === 'function') target._fetch()
+    if (target && typeof target.get === 'function') target.get()
   }
 
   var fmtPad = function (n) { return n < 10 ? '0' + n : String(n) }

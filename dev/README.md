@@ -8,7 +8,7 @@
 | 文件 | 用途 | 启动 |
 |---|---|---|
 | `test-manual.html` | 浏览器手测页面，6 大类功能（基础 / 模板 / HTTP / 防抖 / 资源 / 工具） | 直接打开或经 mock server 一起用 |
-| `mock-server.js` | Node 模拟 ESP32 接口，提供 `/api/sensors`、`/api/devices` CRUD | `node dev/mock-server.js` |
+| `mock-server.js` | Node 模拟 ESP32 接口，提供 `/api/sensors`、`/api/msg` 单值 API | `node dev/mock-server.js` |
 
 ## 典型流程
 
@@ -25,7 +25,7 @@ open dev/test-manual.html
 
 # 浏览器控制台输入：
 nova.poll('/api/sensors', 3000, 'sensors')
-nova.resource('/api/devices', 'devices')
+nova.api('/api/msg', 'msg')
 ```
 
 ## 什么时候来这里

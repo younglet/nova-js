@@ -19,7 +19,7 @@ title: JS API
 | 名称 | 类型 | 说明 |
 |---|---|---|
 | [`nova.poll(url, interval, ns?)`](./utils#novapoll--novaresource) | 函数 | 轮询，自动开始，字段平铺 |
-| [`nova.resource(url, ns?)`](./utils#novapoll--novaresource) | 函数 | CRUD + 乐观更新 + 回滚 |
+| [`nova.api(url, ns?)`](./utils#novapoll--novaapi) | 函数 | GET/POST/PUT/DEL |
 | [`nova.update(ns?)`](./utils#novaupdate) | 函数 | 手动刷新命名空间 |
 
 ## HTTP
